@@ -1,3 +1,7 @@
 
 credentials.json
 token.pickle
+
+.mypy_cache
+
+.vscode

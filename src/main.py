@@ -11,7 +11,7 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
 
 # The ID and range of a sample spreadsheet.
 SAMPLE_SPREADSHEET_ID = "1WG9lDcABDF0FU84QofkgAWoilzEedt2mjibTBKHr7Rs"
-RANGE = "A:U"
+RANGE = "A:T"
 
 
 def main():
@@ -53,26 +53,31 @@ def main():
     values = result.get("values", [])
 
     if not values:
-        print("No data found.")
+        print("[ERROR] No data found.")
     else:
-        print("Data:")
         for row in values[1:]:
-            if row[0] == '3WFZBH2':
+            if row[0] == "3WG0CH2":
 
                 # 19 is where the rID is
-                if row[19] != 'THE BEST ID':
+                if row[19] != "THE BEST ID":
 
                     # Update rID
-                    row[19] = 'THE BEST ID'
+                    row[19] = "THE BEST ID"
 
-                    body = {
-                        'values': values
-                    }
-                    result = service.spreadsheets().values().update(
-                        spreadsheetId=SAMPLE_SPREADSHEET_ID, range=RANGE,
-                        valueInputOption='USER_ENTERED', body=body).execute()
+                    body = {"values": values}
+                    result = (
+                        service.spreadsheets()
+                        .values()
+                        .update(
+                            spreadsheetId=SAMPLE_SPREADSHEET_ID,
+                            range=RANGE,
+                            valueInputOption="USER_ENTERED",
+                            body=body,
+                        )
+                        .execute()
+                    )
 
-                    print('{0} cells updated.'.format(result.get('updatedCells')))
+                    print("[INFO] cells updated.")
                     return
 
                 else:
