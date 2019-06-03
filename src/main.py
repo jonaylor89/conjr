@@ -7,21 +7,21 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/documents']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
-# The ID of a sample document.
-DOCUMENT_ID = '19COFj7k2f1jxn0g87BxmXFOJHZlCociTVMAMxkxDKuk'
+# The ID and range of a sample spreadsheet.
+SAMPLE_SPREADSHEET_ID = '1WG9lDcABDF0FU84QofkgAWoilzEedt2mjibTBKHr7Rs'
+SAMPLE_RANGE_NAME = 'A:T'
 
 def main():
     """
-    Shows basic usage of the Docs API.
-    Prints the title of a sample document.
+    Shows basic usage of the Sheets API.
+    Prints values from a sample spreadsheet.
     """
     creds = None
     # The file token.pickle stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
@@ -38,35 +38,22 @@ def main():
         with open('token.pickle', 'wb') as token:
             pickle.dump(creds, token)
 
-    service = build('docs', 'v1', credentials=creds)
-    requests = [
-         {
-            'insertText': {
-                'location': {
-                    'index': 1,
-                },
-                'text': '\n'
-            }
-        },
-        {
-            'insertText': {
-                'location': {
-                    'index': 2,
-                },
-                'text': 'Hello World'
-            }
-        },
-    ]
+    service = build('sheets', 'v4', credentials=creds)
 
-    result = service.documents().batchUpdate(
-        documentId=DOCUMENT_ID, body={'requests': requests}).execute()
+    # Call the Sheets API
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
+                                range=SAMPLE_RANGE_NAME).execute()
+    values = result.get('values', [])
 
-    # Retrieve the documents contents from the Docs service.
-    document = service.documents().get(documentId=DOCUMENT_ID).execute()
-
-    print('The title of the document is: {}'.format(document.get('title')))
-
+    if not values:
+        print('No data found.')
+    else:
+        print('Name, Major:')
+        for row in values:
+            for value in row:
+                print(f"{value} ", end=" ")
+            print()
 
 if __name__ == '__main__':
     main()
-
