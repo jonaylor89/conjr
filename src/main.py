@@ -27,6 +27,9 @@ def main():
     spreadsheet_id = config["speadsheet_id"]
     range = config["range"]
 
+    # TODO: Check for the kaltura json
+    # TODO: Load the kaltura json for parsing
+
     # Check for google API creds
     if not os.path.exists("credentials.json"):
         print("[ERROR] missing Google API credentials (credentials.json)")
@@ -61,14 +64,15 @@ def main():
 
     # Make sure there is data
     if values:
+        # Exclude the first row because it is full of headers
         for row in values[1:]:
             if row[0] == "3WG0CH2":  # Value with be from kaltura json
 
                 # 19 is where the rID is
-                if row[19] != "THE BEST ID":  # Value will be from kaltura json
+                if row[19] != "Number 1":  # Value will be from kaltura json
 
                     # Update rID
-                    row[19] = "THE BEST ID"  # Value will be from kaltura json
+                    row[19] = "Number 1"  # Value will be from kaltura json
 
                     body = {"values": values}
                     result = (
@@ -92,6 +96,8 @@ def main():
                     # TODO: I think Houstin wants me to edit the kaltura json file here?
 
                     return
+        else:
+            print("[ERROR] could not find serial number in sheet")
     else:
         print("[ERROR] no data found")
 
