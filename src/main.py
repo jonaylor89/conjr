@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import pickle
 import os.path
 from googleapiclient.discovery import build
@@ -78,7 +79,7 @@ def main():
                     )
 
                     print("[INFO] cells updated.")
-                    return
+                    return 
 
                 else:
                     print(row)
