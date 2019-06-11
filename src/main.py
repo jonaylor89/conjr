@@ -1,18 +1,12 @@
 #!/usr/bin/env python3
 
 import sys
+import json
 import pickle
 import os.path
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
-
-# If modifying these scopes, delete the file token.pickle.
-SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-
-# The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = "1WG9lDcABDF0FU84QofkgAWoilzEedt2mjibTBKHr7Rs"
-RANGE = "A:T"
 
 
 def main():
@@ -21,8 +15,21 @@ def main():
     Prints values from a sample spreadsheet.
     """
 
+    # Check for configuration file
+    if not os.path.exists("config.json"):
+        print("[ERROR] missing configuration file (config.json)")
+        return
+
+    # Load configurations
+    config = json.loads("config.json")
+
+    scopes = config["scopes"]
+    spreadsheet_id = config["speadsheet_id"]
+    range = config["range"]
+
+    # Check for google API creds
     if not os.path.exists("credentials.json"):
-        print("[ERROR] Missing Google API credentials (credentials.json)")
+        print("[ERROR] missing Google API credentials (credentials.json)")
         return
 
     creds = None
@@ -32,12 +39,13 @@ def main():
     if os.path.exists("token.pickle"):
         with open("token.pickle", "rb") as token:
             creds = pickle.load(token)
+
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", scopes)
             creds = flow.run_local_server()
 
         # Save the credentials for the next run
@@ -48,30 +56,27 @@ def main():
 
     # Call the Sheets API
     sheet = service.spreadsheets()
-    result = (
-        sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=RANGE).execute()
-    )
+    result = sheet.values().get(spreadsheetId=spreadsheet_id, range=range).execute()
     values = result.get("values", [])
 
-    if not values:
-        print("[ERROR] No data found.")
-    else:
+    # Make sure there is data
+    if values:
         for row in values[1:]:
-            if row[0] == "3WG0CH2":
+            if row[0] == "3WG0CH2":  # Value with be from kaltura json
 
                 # 19 is where the rID is
-                if row[19] != "THE BEST ID":
+                if row[19] != "THE BEST ID":  # Value will be from kaltura json
 
                     # Update rID
-                    row[19] = "THE BEST ID"
+                    row[19] = "THE BEST ID"  # Value will be from kaltura json
 
                     body = {"values": values}
                     result = (
                         service.spreadsheets()
                         .values()
                         .update(
-                            spreadsheetId=SAMPLE_SPREADSHEET_ID,
-                            range=RANGE,
+                            spreadsheetId=spreadsheet_id,
+                            range=range,
                             valueInputOption="USER_ENTERED",
                             body=body,
                         )
@@ -79,11 +84,16 @@ def main():
                     )
 
                     print("[INFO] cells updated.")
-                    return 
+                    return
 
                 else:
-                    print(row)
+                    print(f"[INFO] nothing to change for {row[0]}")
+
+                    # TODO: I think Houstin wants me to edit the kaltura json file here?
+
                     return
+    else:
+        print("[ERROR] no data found")
 
 
 if __name__ == "__main__":
