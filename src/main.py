@@ -43,11 +43,22 @@ def main():
         print("[ERROR] Unknown 'env' in configuration file (must be 'dev' or 'prod')")
         return
 
-    if not os.path.exists("localSettings.json"):
+    if config["env"] == dev:
+        local_settings_path = "localSettings.json"
+    elif config["env"] == prod:
+        # Find the Kaltura local settings
+        houstins_config_path = os.path.join(os.getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
+    
+        local_settings_path = check_output(["powershell.exe", houstins_config_path])
+    else:
+        print("[ERROR] 'env' in configuration file (must be 'dev' or 'prod')")
+        return
+
+    if not os.path.exists(local_settings_path):
         print("[ERROR] unable to find kaltura local settings (localSettings.json)")
         return
 
-    with open("localSettings.json") as f:
+    with open(local_settings_path) as f:
         kaltura = json.load(f)
 
     resource_id = str(kaltura["config"]["shared"]["resourceId"])
