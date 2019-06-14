@@ -43,9 +43,9 @@ def main():
         print("[ERROR] Unknown 'env' in configuration file (must be 'dev' or 'prod')")
         return
 
-    if config["env"] == dev:
+    if config["env"] == "dev":
         local_settings_path = "localSettings.json"
-    elif config["env"] == prod:
+    elif config["env"] == "prod":
         # Find the Kaltura local settings
         houstins_config_path = os.path.join(os.getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
     
