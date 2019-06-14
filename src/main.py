@@ -3,7 +3,10 @@
 import sys
 import json
 import pickle
-import os.path
+import os
+
+from subprocess import check_output
+
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -21,16 +24,35 @@ def main():
         return
 
     # Load configurations
-    config = json.loads("config.json")
+    with open("config.json") as f:
+        config = json.load(f)
 
     scopes = config["scopes"]
     spreadsheet_id = config["speadsheet_id"]
     range = config["range"]
 
-    # TODO: Check for the kaltura json
-    # TODO: Load the kaltura json for parsing
+    serial_number = None
 
-    # Check for google API creds
+    if config["env"] == "dev":
+        # Hardcoded for now
+        serial_number = "3WFZBH2" 
+    elif config["env"] == "prod":
+        # The powershell to grab the serial number in production
+        serial_number = check_output(["powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber"])
+    else:
+        print("[ERROR] Unknown 'env' in configuration file (must be 'dev' or 'prod')")
+        return
+
+    if not os.path.exists("localSettings.json"):
+        print("[ERROR] unable to find kaltura local settings (localSettings.json)")
+        return
+
+    with open("localSettings.json") as f:
+        kaltura = json.load(f)
+
+    resource_id = str(kaltura["config"]["shared"]["resourceId"])
+
+    # Check for google API credentials
     if not os.path.exists("credentials.json"):
         print("[ERROR] missing Google API credentials (credentials.json)")
         return
@@ -66,13 +88,13 @@ def main():
     if values:
         # Exclude the first row because it is full of headers
         for row in values[1:]:
-            if row[0] == "3WG0CH2":  # Value with be from kaltura json
+            if row[0] == serial_number:
 
-                # 19 is where the rID is
-                if row[19] != "Number 1":  # Value will be from kaltura json
+                # 19 is where the rID is and 0 is the default value meaning nothing has been set
+                if row[19] != resource_id and int(row[19]) == 0:
 
                     # Update rID
-                    row[19] = "Number 1"  # Value will be from kaltura json
+                    row[19] = resource_id
 
                     body = {"values": values}
                     result = (
@@ -90,10 +112,19 @@ def main():
                     print("[INFO] cells updated.")
                     return
 
+                elif row[19] != resource_id:
+                    print("[INFO] changing local settings to reflect spreadsheet")
+
+                    kaltura["config"]["shared"]["resourceId"] = int(row[19])
+
+                    # Reopen localSettings to update resourceId
+                    with open("localSettings.json", "w") as f:
+                        json.dump(kaltura, f, indent=2)
+
+                    return 
+
                 else:
                     print(f"[INFO] nothing to change for {row[0]}")
-
-                    # TODO: I think Houstin wants me to edit the kaltura json file here?
 
                     return
         else:
