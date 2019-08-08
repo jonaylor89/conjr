@@ -19,10 +19,10 @@ import (
 
 // Config : Configuration file structure
 type Config struct {
-	env          string `json:"env"`
-	speadsheetID string `json:"speadsheet_id"`
-	scopes       string `json:"scopes"`
-	sheetRange   string `json:"range"`
+	Env          string `json:"env"`
+	SpeadsheetID string `json:"speadsheet_id"`
+	Scopes       string `json:"scopes"`
+	SheetRange   string `json:"range"`
 }
 
 // Retrieve a token, saves the token, then returns the generated client.
@@ -85,12 +85,12 @@ func getKalturaConfig(path string) map[string]interface{} {
 	var kaltura map[string]interface{}
 
 	// Open our jsonFile
-	jsonFile, err := os.Open("config.json")
+	jsonFile, err := os.Open(path)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Successfully Opened config.json")
+	fmt.Println("Successfully Opened localSettings")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
@@ -147,10 +147,10 @@ func main() {
 
 	config := getConfig()
 
-	if config.env == "dev" {
+	if config.Env == "dev" {
 		serialNumber = []byte("3WFBH2")
 		localSettingsPath = []byte("localSettings.json")
-	} else if config.env == "prod" {
+	} else if config.Env == "prod" {
 		// Find the Kaltura local settings
 		houstinsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
 
@@ -165,7 +165,8 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		log.Fatal("[ERROR] unknown 'env' in configuration file (must be 'dev' or 'prod') or environment variables not set properly")
+		log.Println(config.Env)
+		log.Fatal("[ERROR] unknown 'Env' in configuration file (must be 'dev' or 'prod') or environment variables not set properly")
 	}
 
 	if _, err := os.Stat(string(localSettingsPath)); err != nil {
@@ -174,7 +175,7 @@ func main() {
 
 	// Grab kaltura settings
 	kaltura := getKalturaConfig(string(localSettingsPath))
-	resourceID := ((kaltura["config"].(map[string]interface{}))["shared"].(map[string]interface{}))["resrouceId"].(string)
+	resourceID := int(((kaltura["config"].(map[string]interface{}))["shared"].(map[string]interface{}))["resourceId"].(float64))
 
 	if _, err := os.Stat("credentials.json"); err != nil {
 		log.Fatal("[ERROR] missing Google API credentials (credentials.json)")
@@ -186,7 +187,7 @@ func main() {
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	gConfig, err := google.ConfigFromJSON(b, config.scopes)
+	gConfig, err := google.ConfigFromJSON(b, config.Scopes)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
@@ -197,28 +198,27 @@ func main() {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	resp, err := srv.Spreadsheets.Values.Get(config.speadsheetID, config.sheetRange).Do()
+	resp, err := srv.Spreadsheets.Values.Get(config.SpeadsheetID, config.SheetRange).Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve data from sheet: %v", err)
 	}
 
 	// Make sure there is data
 	if len(resp.Values) == 0 {
-		fmt.Println("[ERROR] No data found.")
+		log.Fatal("[ERROR] No data found.")
 	} else {
-		fmt.Println("Name, Major:")
 		for _, row := range resp.Values {
 			if row[0].(string) == string(serialNumber) {
 				temp, _ := strconv.Atoi(row[19].(string))
-				if row[19] != resourceID && temp == 0 {
+				if temp != resourceID && temp == 0 {
 					row[19] = resourceID
 
 					var vr sheets.ValueRange
 					vr.Values = resp.Values
 
 					_, err := srv.Spreadsheets.Values.Update(
-						config.speadsheetID,
-						config.sheetRange,
+						config.SpeadsheetID,
+						config.SheetRange,
 						&vr,
 					).ValueInputOption("USER_ENTERED").Do()
 
