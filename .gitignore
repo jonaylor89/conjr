@@ -1,12 +1,16 @@
 
+
+# Secrets
 credentials.json
 token.json
-token.pickle
 
-.mypy_cache
-
+# Text editors
 .vscode/
 .idea/
 
+# Executables
 conjr 
 conjr.exe
+
+# So I can email it to Nick
+not-exe-conjr
