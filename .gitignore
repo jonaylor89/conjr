@@ -4,6 +4,10 @@ token.pickle
 
 .mypy_cache
 
-.vscode
+.vscode/
+.idea/
 
 localSettings.json
+
+conjr 
+conjr.exe

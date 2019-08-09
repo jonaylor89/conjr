@@ -80,6 +80,7 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
+// Grabs the kaltura configuration file 
 func getKalturaConfig(path string) map[string]interface{} {
 
 	var kaltura map[string]interface{}
@@ -99,7 +100,7 @@ func getKalturaConfig(path string) map[string]interface{} {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	// we unmarshal our byteArray which contains our
-	// jsonFile's content into 'config' which we defined above
+	// json file's content into 'config' which we defined above
 	json.Unmarshal(byteValue, &kaltura)
 
 	return kaltura
@@ -151,11 +152,12 @@ func main() {
 		serialNumber = []byte("3WFBH2")
 		localSettingsPath = []byte("localSettings.json")
 	} else if config.Env == "prod" {
+
 		// Find the Kaltura local settings
-		houstinsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
+		houstonsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
 
 		var err error
-		localSettingsPath, err = exec.Command("powershell.exe", houstinsConfigPath).Output()
+		localSettingsPath, err = exec.Command("powershell.exe", houstonsConfigPath).Output()
 		if err != nil {
 			log.Fatal(err)
 		}
