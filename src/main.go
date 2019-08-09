@@ -91,7 +91,7 @@ func getKalturaConfig(path string) map[string]interface{} {
 		log.Fatal(err)
 	}
 
-	fmt.Println("[INFO] Successfully Opened localSettings")
+	log.Println("[INFO] Successfully Opened localSettings")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
@@ -112,7 +112,7 @@ func updateKalturaSettings(path []byte, newSettings map[string]interface{}) {
 	err := ioutil.WriteFile(string(path), marshalledSettings, 0644)
 
 	if err != nil {
-		fmt.Println("[ERROR] new kaltura config couldn't be written to")
+		log.Println("[ERROR] new kaltura config couldn't be written to")
 	}
 }
 
@@ -126,7 +126,7 @@ func getConfig() *Config {
 		log.Fatal(err)
 	}
 
-	fmt.Println("[INFO] Successfully Opened config.json")
+	log.Println("[INFO] Successfully Opened config.json")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
@@ -225,10 +225,10 @@ func main() {
 						log.Fatalf("unable to update sheet %v", err)
 					}
 
-					fmt.Println("[INFO] cells updated")
+					log.Println("[INFO] cells updated")
 					return
 				} else if intRow, _ := strconv.Atoi(row[20].(string)); intRow != resourceID {
-					fmt.Println("[INFO] changing local settings to reflect spreadsheet")
+					log.Println("[INFO] changing local settings to reflect spreadsheet")
 
 					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _= strconv.Atoi(row[20].(string))
 
@@ -236,7 +236,7 @@ func main() {
 					updateKalturaSettings(localSettingsPath, kaltura)
 
 				} else {
-					fmt.Println("[INFO] nothing to change for " + row[0].(string))
+					log.Println("[INFO] nothing to change for " + row[0].(string))
 					return
 				}
 			}
