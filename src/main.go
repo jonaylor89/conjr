@@ -80,7 +80,7 @@ func saveToken(path string, token *oauth2.Token) {
 	json.NewEncoder(f).Encode(token)
 }
 
-// Grabs the kaltura configuration file 
+// Grabs the kaltura configuration file
 func getKalturaConfig(path string) map[string]interface{} {
 
 	var kaltura map[string]interface{}
@@ -215,13 +215,10 @@ func main() {
 				if temp != resourceID && temp == 0 {
 					row[19] = resourceID
 
-					var vr sheets.ValueRange
-					vr.Values = resp.Values
-
 					_, err := srv.Spreadsheets.Values.Update(
 						config.SpeadsheetID,
 						config.SheetRange,
-						&vr,
+						resp,
 					).ValueInputOption("USER_ENTERED").Do()
 
 					if err != nil {
