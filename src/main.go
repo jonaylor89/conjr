@@ -227,7 +227,7 @@ func main() {
 
 					fmt.Println("[INFO] cells updated")
 					return
-				} else if row[19] != resourceID {
+				} else if intRow, _ := strconv.Atoi(row[20].(string)); intRow != resourceID {
 					fmt.Println("[INFO] changing local settings to reflect spreadsheet")
 
 					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _= strconv.Atoi(row[20].(string))
