@@ -47,12 +47,12 @@ func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
 
 	var authCode string
 	if _, err := fmt.Scan(&authCode); err != nil {
-		log.Fatalf("Unable to read authorization code: %v", err)
+		log.Fatalf("[ERROR] unable to read authorization code: %v", err)
 	}
 
 	tok, err := config.Exchange(context.TODO(), authCode)
 	if err != nil {
-		log.Fatalf("Unable to retrieve token from web: %v", err)
+		log.Fatalf("[ERROR] unable to retrieve token from web: %v", err)
 	}
 	return tok
 }
@@ -91,7 +91,7 @@ func getKalturaConfig(path string) map[string]interface{} {
 		log.Fatal(err)
 	}
 
-	log.Println("[INFO] Successfully Opened localSettings")
+	log.Println("[INFO] successfully Opened localSettings")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
