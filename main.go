@@ -21,7 +21,6 @@ import (
 type Config struct {
 	InstallParameters *InstallParameters `json:"install_parameters"`
 	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
-	Installed         *Installed         `json:"installed"`
 	KalturaSettings   *KalturaSettings   `json:"kaltura_classroomn_localsettings"`
 }
 
@@ -44,17 +43,6 @@ type SheetConfig struct {
 	SpeadsheetID string `json:"speadsheet_id"`
 	Scopes       string `json:"scopes"`
 	SheetRange   string `json:"range"`
-}
-
-// Installed : Google Creds
-type Installed struct {
-	ClientID     string `json:"client_id"`
-	ProjectID    string `json:"project_id"`
-	AuthURI      string `json:"auth_uri"`
-	TokenURI     string `json:"token_uri"`
-	AuthProvider string `json:"auth_provider_x509_cert_url"`
-	ClientSecret string `json:"client_secret"`
-	RedirectURIs string `json:"redirect_uris"`
 }
 
 // KalturaSettings : Kaltura Classroom local settings
@@ -132,7 +120,7 @@ func getKalturaConfig(path string) map[string]interface{} {
 		log.Fatal(err)
 	}
 
-	log.Println("[INFO] successfully Opened localSettings")
+	log.Println("[INFO] successfully opened localSettings")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
@@ -167,7 +155,7 @@ func getConfig() *Config {
 		log.Fatal(err)
 	}
 
-	log.Println("[INFO] Successfully Opened config.json")
+	log.Println("[INFO] successfully opened config.json")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
