@@ -17,12 +17,32 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-// Config : Configuration file structure
 type Config struct {
+	InstallParameters InstallParameters `json:"install_parameters"`
+	SheetConfig SheetConfig `json:"google_sheet_config"`
+	Installed Installed `json:"installed"`
+	KalturaSettings KalturaSettings `json:"kaltura_classroomn_localsettings"`
+}
+
+type InstallParameters struct {
+	Silent string `json:"silent"`
+	InstalleDir string `json:"install_dir"`
+}
+
+// SheetConfig : Configuration for google sheet
+type SheetConfig struct {
 	Env          string `json:"env"`
 	SpeadsheetID string `json:"speadsheet_id"`
 	Scopes       string `json:"scopes"`
 	SheetRange   string `json:"range"`
+}
+
+type Installed struct {
+	ClientID string `json:"client_id"`
+}
+
+type KalturaSettings struct {
+	ResourceID string `json:"resourceID"`
 }
 
 // Retrieve a token, saves the token, then returns the generated client.

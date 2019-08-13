@@ -1,0 +1,45 @@
+{
+    "install_parameters": {
+        "silent": "yes",
+        // (equals / qn / norestart ADDLOCAL = ALL)
+        "install_dir": "T:\\Kaltura\\Classroom",
+        // (equals INSTALLDIR)
+        "recording_dir": "T:\\Kaltura\\Classroom\\Recordings",
+        // (equals KALTURA_RECORDINGS_DIR)
+        "url": "https://www.kaltura.com/",
+        // (equals KALTURA_URL)
+        "apptoken": "b17a48a9551d8b44076004458c3226a9",
+        // (equals KALTURA_APPTOKEN)
+        "apptoken_id": "1_3ma5nq5l",
+        // (equals KALTURA_APPTOKEN_ID)
+        "partner_id": "1888231",
+        // (equals KALTURA_PARTNER_ID)
+        "desktop_shortcut": "no",
+        // (equals INSTALLDESKTOPSHORTCUT = 0)
+        "program_shortcut": "yes"
+        // (equals INSTALLPROGRAMSSHORTCUT = 1)
+    },
+
+    "google_sheet_config": {
+        "env": "dev",
+        "speadsheet_id": "1WG9lDcABDF0FU84QofkgAWoilzEedt2mjibTBKHr7Rs",
+        "scopes": "https://www.googleapis.com/auth/spreadsheets",
+        "range": "Sheet1!A1:V1000"
+    },
+
+    "installed": {
+        "client_id": "390043989899-vh6relo9rpj2ovda50enm1e8pjb5br91.apps.googleusercontent.com",
+        "project_id": "conjr-242615",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_secret": "hpr94teZdJFfKWGDtPQguQbi",
+        "redirect_uris": ["urn:ietf:wg:oauth:2.0:oob", "http://localhost"]
+    },
+
+    "kaltura_classroom_localsettings": {
+        "resourceID": "132456",
+        "launch_silent": "yes",
+        "countdown": ""
+    }
+}
