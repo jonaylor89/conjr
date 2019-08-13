@@ -19,10 +19,10 @@ import (
 
 // Config : Global Configuration
 type Config struct {
-	InstallParameters InstallParameters `json:"install_parameters"`
-	SheetConfig       SheetConfig       `json:"google_sheet_config"`
-	Installed         Installed         `json:"installed"`
-	KalturaSettings   KalturaSettings   `json:"kaltura_classroomn_localsettings"`
+	InstallParameters *InstallParameters `json:"install_parameters"`
+	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
+	Installed         *Installed         `json:"installed"`
+	KalturaSettings   *KalturaSettings   `json:"kaltura_classroomn_localsettings"`
 }
 
 // InstallParameters : PostInstall Cconfiguration settings
@@ -189,10 +189,10 @@ func main() {
 
 	config := getConfig()
 
-	if config.Env == "dev" {
+	if config.SheetConfig.Env == "dev" {
 		serialNumber = []byte("3WFZBH2")
 		localSettingsPath = []byte("localSettings.json")
-	} else if config.Env == "prod" {
+	} else if config.SheetConfig.Env == "prod" {
 
 		// Find the Kaltura local settings
 		houstonsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
@@ -208,7 +208,7 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		log.Println(config.Env)
+		log.Println(config.SheetConfig.Env)
 		log.Fatal("[ERROR] unknown 'Env' in configuration file (must be 'dev' or 'prod') or environment variables not set properly")
 	}
 
@@ -230,7 +230,7 @@ func main() {
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	gConfig, err := google.ConfigFromJSON(b, config.Scopes)
+	gConfig, err := google.ConfigFromJSON(b, config.SheetConfig.Scopes)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
@@ -241,7 +241,7 @@ func main() {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	resp, err := srv.Spreadsheets.Values.Get(config.SpeadsheetID, config.SheetRange).Do()
+	resp, err := srv.Spreadsheets.Values.Get(config.SheetConfig.SpeadsheetID, config.SheetConfig.SheetRange).Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve data from sheet: %v", err)
 	}
@@ -257,8 +257,8 @@ func main() {
 					row[20] = resourceID
 
 					_, err := srv.Spreadsheets.Values.Update(
-						config.SpeadsheetID,
-						config.SheetRange,
+						config.SheetConfig.SpeadsheetID,
+						config.SheetConfig.SheetRange,
 						resp,
 					).ValueInputOption("USER_ENTERED").Do()
 
