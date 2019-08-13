@@ -17,16 +17,25 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
+// Config : Global Configuration
 type Config struct {
 	InstallParameters InstallParameters `json:"install_parameters"`
-	SheetConfig SheetConfig `json:"google_sheet_config"`
-	Installed Installed `json:"installed"`
-	KalturaSettings KalturaSettings `json:"kaltura_classroomn_localsettings"`
+	SheetConfig       SheetConfig       `json:"google_sheet_config"`
+	Installed         Installed         `json:"installed"`
+	KalturaSettings   KalturaSettings   `json:"kaltura_classroomn_localsettings"`
 }
 
+// InstallParameters : PostInstall Cconfiguration settings
 type InstallParameters struct {
-	Silent string `json:"silent"`
-	InstalleDir string `json:"install_dir"`
+	Silent          string `json:"silent"`
+	InstalleDir     string `json:"install_dir"`
+	RecordingDir    string `json:"recording_dir"`
+	URL             string `json:"url"`
+	AppToken        string `json:"apptoken"`
+	AppTokenID      string `json:"apptoken_id"`
+	PartnerID       string `json:"partner_id"`
+	DesktopShortcut string `json:"desktop_shortcut"`
+	ProgramShortcut string `json:"program_shortcut"`
 }
 
 // SheetConfig : Configuration for google sheet
@@ -37,12 +46,22 @@ type SheetConfig struct {
 	SheetRange   string `json:"range"`
 }
 
+// Installed : Google Creds
 type Installed struct {
-	ClientID string `json:"client_id"`
+	ClientID     string `json:"client_id"`
+	ProjectID    string `json:"project_id"`
+	AuthURI      string `json:"auth_uri"`
+	TokenURI     string `json:"token_uri"`
+	AuthProvider string `json:"auth_provider_x509_cert_url"`
+	ClientSecret string `json:"client_secret"`
+	RedirectURIs string `json:"redirect_uris"`
 }
 
+// KalturaSettings : Kaltura Classroom local settings
 type KalturaSettings struct {
-	ResourceID string `json:"resourceID"`
+	ResourceID   string `json:"resourceID"`
+	LaunchSilent string `json:"luanch_silent"`
+	Countdown    string `json:"countdown"`
 }
 
 // Retrieve a token, saves the token, then returns the generated client.
@@ -83,9 +102,9 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	defer f.Close()
-	
+
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
 	return tok, err
@@ -252,7 +271,7 @@ func main() {
 				} else if intRow, _ := strconv.Atoi(row[20].(string)); intRow != resourceID {
 					log.Println("[INFO] changing local settings to reflect spreadsheet")
 
-					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _= strconv.Atoi(row[20].(string))
+					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _ = strconv.Atoi(row[20].(string))
 
 					// TODO: Update kaltura json
 					updateKalturaSettings(localSettingsPath, kaltura)
