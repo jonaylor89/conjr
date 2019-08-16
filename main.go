@@ -83,13 +83,13 @@ func getKalturaConfig(path string) map[string]interface{} {
 	return kaltura
 }
 
-func updateKalturaSettings(path string, newSettings map[string]interface{}) {
+func updateKalturaSettings(path string, newSettings map[string]interface{}) error {
 
 	marshalledSettings, _ := json.MarshalIndent(newSettings, "", "\t")
 	err := ioutil.WriteFile(path, marshalledSettings, 0644)
 
 	if err != nil {
-		log.Println("[ERROR] new kaltura config couldn't be written to")
+		return err
 	}
 }
 
@@ -157,20 +157,22 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 
 func main() {
 
-	var serialNumber []byte
-	var localSettingsPath string
-
+	// Serialize JSON config file
 	config, err := getConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	installMSI(config.BinaryParameters, config.InstallParameters)
+	// Download and Install Kaltura Classroom MSI
+	err = installMSI(config.BinaryParameters, config.InstallParameters)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// Find the Kaltura local settings
-	localSettingsPath = filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\localSettings.json")
+	localSettingsPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\localSettings.json")
 
-	serialNumber, err = exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
+	serialNumber, err := exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -189,24 +191,24 @@ func main() {
 
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		log.Fatalf("unable to read client secret file: %v", err)
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
 	gConfig, err := google.ConfigFromJSON(b, config.SheetConfig.Scopes)
 	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
+		log.Fatalf("unable to parse client secret file to config: %v", err)
 	}
 	client := getClient(gConfig)
 
 	srv, err := sheets.New(client)
 	if err != nil {
-		log.Fatalf("Unable to retrieve Sheets client: %v", err)
+		log.Fatalf("unable to retrieve Sheets client: %v", err)
 	}
 
 	resp, err := srv.Spreadsheets.Values.Get(config.SheetConfig.SpeadsheetID, config.SheetConfig.SheetRange).Do()
 	if err != nil {
-		log.Fatalf("Unable to retrieve data from sheet: %v", err)
+		log.Fatalf("unable to retrieve data from sheet: %v", err)
 	}
 
 	// Make sure there is data
@@ -221,7 +223,7 @@ func main() {
 				if temp != resourceID && temp == 0 {
 					row[20] = resourceID
 
-					_, err := srv.Spreadsheets.Values.Update(
+					result, err := srv.Spreadsheets.Values.Update(
 						config.SheetConfig.SpeadsheetID,
 						config.SheetConfig.SheetRange,
 						resp,
@@ -231,14 +233,20 @@ func main() {
 						log.Fatalf("unable to update sheet %v", err)
 					}
 
-					log.Println("[INFO] cells updated")
+					log.Printf("[INFO] %d cells updated\n", result.UpdatedCells)
 					return
 				} else if intRow, _ := strconv.Atoi(row[20].(string)); intRow != resourceID {
 					log.Println("[INFO] changing local settings to reflect spreadsheet")
 
-					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _ = strconv.Atoi(row[20].(string))
+					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], err = strconv.Atoi(row[20].(string))
+					if err != nil {
+						log.Fatal(err)
+					}
 
-					updateKalturaSettings(localSettingsPath, kaltura)
+					err = updateKalturaSettings(localSettingsPath, kaltura)
+					if err != nil {
+						log.Fatal(err)
+					}
 
 				} else {
 					log.Println("[INFO] nothing to change for " + row[0].(string))
