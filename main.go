@@ -3,15 +3,15 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
-	"log"
+	"lo"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"text/template"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -21,15 +21,23 @@ import (
 
 // Config : Global Configuration
 type Config struct {
+	BinaryParameters  *BinaryParameters  `json:"binary_parameters"`
 	InstallParameters *InstallParameters `json:"install_parameters"`
 	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
 	KalturaSettings   *KalturaSettings   `json:"kaltura_classroomn_localsettings"`
 }
 
+// BinaryParameters : Parameters to download kaltura binary
+type BinaryParameters struct {
+	URL          string `json:"url"`
+	Checksum     string `json:"checksum"`
+	FileLocation string `json:"file_location"`
+}
+
 // InstallParameters : PostInstall Cconfiguration settings
 type InstallParameters struct {
 	Silent          string `json:"silent"`
-	InstallDir     string `json:"install_dir"`
+	InstallDir      string `json:"install_dir"`
 	RecordingDir    string `json:"recording_dir"`
 	URL             string `json:"url"`
 	AppToken        string `json:"apptoken"`
@@ -172,34 +180,26 @@ func getConfig() *Config {
 	return &config
 }
 
-func createMSIString(params InstallParameters) string {
+func installMSI(binParams BinaryParameters, installParams InstallParameters) error {
 
-	buf := new(bytes.Buffer)
-
-	tmplString := `
-		INSTALLDIR={{ .TnstallDir }}
+	tmplString := `msiexec.exe /i %s /qn /norestart
+		INSTALLDIR=%s
 		ADDLOCAL=ALL
-		KALTURA_RECORDINGS_DIR={{ .RecordingDir }}
-		KALTURA_URL={{ .URL }}
-		KALTURA_APPTOKEN={{ .AppToken }}
-		KALTURA_APPTOKEN_ID={{ .AppTokenID }}
-		KALTURA_PARTNER_ID={{ .PartnerID }}
-		INSTALLDESKTOPSHORTCUT={{ .DesktopShortcut }}
-		INSTALLPROGRAMSSHORTCUT={{ .ProgramShortcut }}
+		KALTURA_RECORDINGS_DIR=%s
+		KALTURA_URL=%s
+		KALTURA_APPTOKEN=%s
+		KALTURA_APPTOKEN_ID=%s
+		KALTURA_PARTNER_ID=%s
+		INSTALLDESKTOPSHORTCUT=%s
+		INSTALLPROGRAMSSHORTCUT=%s
 	`
+	installString := fmt.Sprintf()
+		
+	return errors.New("Placeholder")
+}
 
-	tmpl, err := template.New("installation").Parse(tmplString)
-	if err != nil {
-		log.Fatal("[ERROR] cannot parse tempalte string")
-	}
-
-	err = tmpl.Execute(buf, params)
-	if err != nil {
-		log.Fatal("[ERROR] cannot execute templating")
-	}
-
-	return buf.String()
-
+func createLocalSettings(binParams BinaryParameters, installParams InstallPararmeters) error {
+	
 }
 
 func main() {
