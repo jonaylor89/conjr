@@ -1,4 +1,10 @@
 {
+    "binary_parameters": {
+        "url" : "https://choco.lcc.ts.vcu.edu/files/bin/zip/vcuKalturaClassroom_3.2.74.zip",
+        "checksum" : "",
+        "file_location" : "C:\\VCU-Deploy\\bin\\Kaltura Classroom\\setup.msi"
+    },
+
     "install_parameters": {
         "silent": "yes",
         "install_dir": "T:\\Kaltura\\Classroom",

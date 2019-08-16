@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -10,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"text/template"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -27,7 +29,7 @@ type Config struct {
 // InstallParameters : PostInstall Cconfiguration settings
 type InstallParameters struct {
 	Silent          string `json:"silent"`
-	InstalleDir     string `json:"install_dir"`
+	InstallDir     string `json:"install_dir"`
 	RecordingDir    string `json:"recording_dir"`
 	URL             string `json:"url"`
 	AppToken        string `json:"apptoken"`
@@ -125,7 +127,7 @@ func getKalturaConfig(path string) map[string]interface{} {
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 
-	// read our opened xmlFile as a byte array.
+	// read our opened jsonFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	// we unmarshal our byteArray which contains our
@@ -168,6 +170,36 @@ func getConfig() *Config {
 	json.Unmarshal(byteValue, &config)
 
 	return &config
+}
+
+func createMSIString(params InstallParameters) string {
+
+	buf := new(bytes.Buffer)
+
+	tmplString := `
+		INSTALLDIR={{ .TnstallDir }}
+		ADDLOCAL=ALL
+		KALTURA_RECORDINGS_DIR={{ .RecordingDir }}
+		KALTURA_URL={{ .URL }}
+		KALTURA_APPTOKEN={{ .AppToken }}
+		KALTURA_APPTOKEN_ID={{ .AppTokenID }}
+		KALTURA_PARTNER_ID={{ .PartnerID }}
+		INSTALLDESKTOPSHORTCUT={{ .DesktopShortcut }}
+		INSTALLPROGRAMSSHORTCUT={{ .ProgramShortcut }}
+	`
+
+	tmpl, err := template.New("installation").Parse(tmplString)
+	if err != nil {
+		log.Fatal("[ERROR] cannot parse tempalte string")
+	}
+
+	err = tmpl.Execute(buf, params)
+	if err != nil {
+		log.Fatal("[ERROR] cannot execute templating")
+	}
+
+	return buf.String()
+
 }
 
 func main() {
@@ -239,6 +271,8 @@ func main() {
 		log.Fatal("[ERROR] No data found.")
 	} else {
 		for _, row := range resp.Values {
+
+			// Serial Number is already in google sheet
 			if row[0].(string) == string(serialNumber) {
 				temp, _ := strconv.Atoi(row[20].(string))
 				if temp != resourceID && temp == 0 {
@@ -270,5 +304,8 @@ func main() {
 				}
 			}
 		}
+
+		// Serial Number isn't in google sheet
+
 	}
 }
