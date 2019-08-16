@@ -58,14 +58,14 @@ type KalturaSettings struct {
 }
 
 // Grabs the kaltura configuration file
-func getKalturaConfig(path string) map[string]interface{} {
+func getKalturaConfig(path string) map[string]interface{}, error {
 
 	var kaltura map[string]interface{}
 
 	// Open our jsonFile
 	jsonFile, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	log.Println("[INFO] successfully opened localSettings")
@@ -80,7 +80,7 @@ func getKalturaConfig(path string) map[string]interface{} {
 	// json file's content into 'config' which we defined above
 	json.Unmarshal(byteValue, &kaltura)
 
-	return kaltura
+	return kaltura, nil
 }
 
 func updateKalturaSettings(path string, newSettings map[string]interface{}) error {
@@ -91,6 +91,8 @@ func updateKalturaSettings(path string, newSettings map[string]interface{}) erro
 	if err != nil {
 		return err
 	}
+
+	return nil
 }
 
 func getConfig() (*Config, error) {
@@ -182,7 +184,11 @@ func main() {
 	}
 
 	// Grab kaltura settings
-	kaltura := getKalturaConfig(string(localSettingsPath))
+	kaltura, err := getKalturaConfig(string(localSettingsPath))
+	if err != nil {
+		log.Fatal(err)
+	}
+	
 	resourceID := int(((kaltura["config"].(map[string]interface{}))["shared"].(map[string]interface{}))["resourceId"].(float64))
 
 	if _, err := os.Stat("credentials.json"); err != nil {
