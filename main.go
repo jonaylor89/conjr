@@ -145,10 +145,10 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	)
 
 	cmd := exec.Command("msiexec.exe", installString)
-	if err := cmd.Run(); err != nil { 
+	if err := cmd.Run(); err != nil {
 		fmt.Println("[ERROR] could not install kaltura")
 		return err
-    }   
+	}
 
 	return nil
 }
@@ -167,23 +167,12 @@ func main() {
 
 	installMSI(config.BinaryParameters, config.InstallParameters)
 
-	if config.SheetConfig.Env == "dev" {
-		serialNumber = []byte("3WFZBH2")
-		localSettingsPath = "localSettings.json"
-	} else if config.SheetConfig.Env == "prod" {
+	// Find the Kaltura local settings
+	localSettingsPath = filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\localSettings.json")
 
-		// Find the Kaltura local settings
-		localSettingsPath = filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\localSettings.json")
-
-		var err error
-		serialNumber, err = exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-	} else {
-		log.Println(config.SheetConfig.Env)
-		log.Fatal("[ERROR] unknown 'Env' in configuration file (must be 'dev' or 'prod') or environment variables not set properly")
+	serialNumber, err = exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if _, err := os.Stat(string(localSettingsPath)); err != nil {
