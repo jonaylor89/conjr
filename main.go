@@ -6,7 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"lo"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -145,24 +145,24 @@ func getKalturaConfig(path string) map[string]interface{} {
 	return kaltura
 }
 
-func updateKalturaSettings(path []byte, newSettings map[string]interface{}) {
+func updateKalturaSettings(path string, newSettings map[string]interface{}) {
 
 	marshalledSettings, _ := json.MarshalIndent(newSettings, "", "\t")
-	err := ioutil.WriteFile(string(path), marshalledSettings, 0644)
+	err := ioutil.WriteFile(path, marshalledSettings, 0644)
 
 	if err != nil {
 		log.Println("[ERROR] new kaltura config couldn't be written to")
 	}
 }
 
-func getConfig() *Config {
+func getConfig() (*Config, error) {
 
 	var config Config
 
 	// Open our jsonFile
 	jsonFile, err := os.Open("config.json")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	log.Println("[INFO] successfully opened config.json")
@@ -180,9 +180,11 @@ func getConfig() *Config {
 	return &config
 }
 
-func installMSI(binParams BinaryParameters, installParams InstallParameters) error {
+func installMSI(binParams *BinaryParameters, installParams *InstallParameters) error {
 
-	tmplString := `msiexec.exe /i %s /qn /norestart
+	// Download Binary
+
+	tmplString := `/i %s /qn /norestart
 		INSTALLDIR=%s
 		ADDLOCAL=ALL
 		KALTURA_RECORDINGS_DIR=%s
@@ -193,40 +195,54 @@ func installMSI(binParams BinaryParameters, installParams InstallParameters) err
 		INSTALLDESKTOPSHORTCUT=%s
 		INSTALLPROGRAMSSHORTCUT=%s
 	`
-	installString := fmt.Sprintf()
-		
-	return errors.New("Placeholder")
+	installString := fmt.Sprintf(tmplString,
+		binParams.FileLocation,
+		installParams.InstallDir,
+		installParams.RecordingDir,
+		installParams.URL,
+		installParams.AppToken,
+		installParams.AppTokenID,
+		installParams.DesktopShortcut,
+		installParams.ProgramShortcut,
+	)
+
+	cmd := exec.Command("msiexec.exe", installString)
+	if err := cmd.Run(); err != nil { 
+		fmt.Println("[ERROR] could not install kaltura")
+		return err
+    }   
+
+	return nil
 }
 
-func createLocalSettings(binParams BinaryParameters, installParams InstallPararmeters) error {
-	
-}
+// func createLocalSettings(binParams BinaryParameters, installParams InstallParameters) error
 
 func main() {
 
 	var serialNumber []byte
-	var localSettingsPath []byte
+	var localSettingsPath string
 
-	config := getConfig()
+	config, err := getConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	installMSI(config.BinaryParameters, config.InstallParameters)
 
 	if config.SheetConfig.Env == "dev" {
 		serialNumber = []byte("3WFZBH2")
-		localSettingsPath = []byte("localSettings.json")
+		localSettingsPath = "localSettings.json"
 	} else if config.SheetConfig.Env == "prod" {
 
 		// Find the Kaltura local settings
-		houstonsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
+		localSettingsPath = filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\localSettings.json")
 
 		var err error
-		localSettingsPath, err = exec.Command("powershell.exe", houstonsConfigPath).Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		serialNumber, err = exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
 		if err != nil {
 			log.Fatal(err)
 		}
+
 	} else {
 		log.Println(config.SheetConfig.Env)
 		log.Fatal("[ERROR] unknown 'Env' in configuration file (must be 'dev' or 'prod') or environment variables not set properly")
@@ -295,7 +311,6 @@ func main() {
 
 					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _ = strconv.Atoi(row[20].(string))
 
-					// TODO: Update kaltura json
 					updateKalturaSettings(localSettingsPath, kaltura)
 
 				} else {
@@ -306,6 +321,7 @@ func main() {
 		}
 
 		// Serial Number isn't in google sheet
+		// Add Serial Number to google sheet
 
 	}
 }
