@@ -159,6 +159,16 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 
 func main() {
 
+	// Make sure Google credentials file exists
+	if _, err := os.Stat("credentials.json"); err != nil {
+		log.Fatal("[ERROR] missing Google API credentials (credentials.json)")
+	}
+
+	// Make sure localSettings config file exists
+	if _, err := os.Stat(string(localSettingsPath)); err != nil {
+		log.Fatal("[ERROR] unable to find kaltura local settings (localSettings.json)")
+	}
+
 	// Serialize JSON config file
 	config, err := getConfig()
 	if err != nil {
@@ -179,10 +189,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if _, err := os.Stat(string(localSettingsPath)); err != nil {
-		log.Fatal("[ERROR] unable to find kaltura local settings (localSettings.json)")
-	}
-
 	// Grab kaltura settings
 	kaltura, err := getKalturaConfig(string(localSettingsPath))
 	if err != nil {
@@ -190,10 +196,6 @@ func main() {
 	}
 	
 	resourceID := int(((kaltura["config"].(map[string]interface{}))["shared"].(map[string]interface{}))["resourceId"].(float64))
-
-	if _, err := os.Stat("credentials.json"); err != nil {
-		log.Fatal("[ERROR] missing Google API credentials (credentials.json)")
-	}
 
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
@@ -205,6 +207,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("unable to parse client secret file to config: %v", err)
 	}
+
 	client := getClient(gConfig)
 
 	srv, err := sheets.New(client)
