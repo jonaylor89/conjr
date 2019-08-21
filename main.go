@@ -159,13 +159,21 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 
 func main() {
 
+	// Find the Kaltura local settings
+	localSettingsPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\localSettings.json")
+
+	serialNumber, err := exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	// Make sure Google credentials file exists
 	if _, err := os.Stat("credentials.json"); err != nil {
 		log.Fatal("[ERROR] missing Google API credentials (credentials.json)")
 	}
 
 	// Make sure localSettings config file exists
-	if _, err := os.Stat(string(localSettingsPath)); err != nil {
+	if _, err := os.Stat(localSettingsPath); err != nil {
 		log.Fatal("[ERROR] unable to find kaltura local settings (localSettings.json)")
 	}
 
@@ -181,14 +189,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// Find the Kaltura local settings
-	localSettingsPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\localSettings.json")
-
-	serialNumber, err := exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	// Grab kaltura settings
 	kaltura, err := getKalturaConfig(string(localSettingsPath))
 	if err != nil {
@@ -199,32 +199,32 @@ func main() {
 
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
-		log.Fatalf("unable to read client secret file: %v", err)
+		log.Fatalf("unable to read client secret file: %v\n", err)
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
 	gConfig, err := google.ConfigFromJSON(b, config.SheetConfig.Scopes)
 	if err != nil {
-		log.Fatalf("unable to parse client secret file to config: %v", err)
+		log.Fatalf("unable to parse client secret file to config: %v\n", err)
 	}
 
 	client := getClient(gConfig)
 
 	srv, err := sheets.New(client)
 	if err != nil {
-		log.Fatalf("unable to retrieve Sheets client: %v", err)
+		log.Fatalf("unable to retrieve Sheets client: %v\n", err)
 	}
 
 	resp, err := srv.Spreadsheets.Values.Get(config.SheetConfig.SpeadsheetID, config.SheetConfig.SheetRange).Do()
 	if err != nil {
-		log.Fatalf("unable to retrieve data from sheet: %v", err)
+		log.Fatalf("unable to retrieve data from sheet: %v\n", err)
 	}
 
 	// Make sure there is data
 	if len(resp.Values) == 0 {
 		log.Fatal("[ERROR] No data found.")
 	} else {
-		for _, row := range resp.Values {
+		for i, row := range resp.Values {
 
 			// Serial Number is already in google sheet
 			if row[0].(string) == string(serialNumber) {
@@ -258,7 +258,7 @@ func main() {
 					}
 
 				} else {
-					log.Println("[INFO] nothing to change for " + row[0].(string))
+					log.Printf("[INFO] %d.) nothing to change for %s\n", i, row[0].(string))
 					return
 				}
 			}
