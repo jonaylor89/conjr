@@ -88,11 +88,7 @@ func updateKalturaSettings(path string, newSettings map[string]interface{}) erro
 	marshalledSettings, _ := json.MarshalIndent(newSettings, "", "\t")
 	err := ioutil.WriteFile(path, marshalledSettings, 0644)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func getConfig() (*Config, error) {
@@ -257,8 +253,11 @@ func main() {
 						log.Fatal(err)
 					}
 
+					return
+
 				} else {
 					log.Printf("[INFO] %d.) nothing to change for %s\n", i, row[0].(string))
+
 					return
 				}
 			}
@@ -266,6 +265,45 @@ func main() {
 
 		// Serial Number isn't in google sheet
 		// Add Serial Number to google sheet
+		rb := &sheets.ValueRange{
+			Values: [][]string{
+				{
+					serialNumber, 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"",
+					resourceID,
+				},
+			}
+		}
+
+		resp, err = srv.SpreadSheet.Values.Append(
+			config.SheetConfig.SpeadsheetID,
+			config.SheetConfig.SheetRange,
+			rb,
+		).ValueInputOption("USER_ENTERED").Do()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("Serial Number (%s) added to the googlesheet\n", serialNumber)
+		fmt.Println(resp)
 
 	}
 }
