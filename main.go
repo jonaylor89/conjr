@@ -265,6 +265,7 @@ func main() {
 
 		// Serial Number isn't in google sheet
 		// Add Serial Number to google sheet
+
 		rb := &sheets.ValueRange{
 			Values: [][]string{
 				{
