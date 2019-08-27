@@ -118,7 +118,7 @@ func getConfig() (*Config, error) {
 
 func installMSI(binParams *BinaryParameters, installParams *InstallParameters) error {
 
-	// Download Binary
+	// TODO: Download Binary
 
 	tmplString := `/i %s /qn /norestart
 		INSTALLDIR=%s
