@@ -17,51 +17,12 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
-// Config : Global Configuration
+// Config : Configuration file structure
 type Config struct {
-	InstallParameters *InstallParameters `json:"install_parameters"`
-	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
-	Installed         *Installed         `json:"installed"`
-	KalturaSettings   *KalturaSettings   `json:"kaltura_classroomn_localsettings"`
-}
-
-// InstallParameters : PostInstall Cconfiguration settings
-type InstallParameters struct {
-	Silent          string `json:"silent"`
-	InstalleDir     string `json:"install_dir"`
-	RecordingDir    string `json:"recording_dir"`
-	URL             string `json:"url"`
-	AppToken        string `json:"apptoken"`
-	AppTokenID      string `json:"apptoken_id"`
-	PartnerID       string `json:"partner_id"`
-	DesktopShortcut string `json:"desktop_shortcut"`
-	ProgramShortcut string `json:"program_shortcut"`
-}
-
-// SheetConfig : Configuration for google sheet
-type SheetConfig struct {
 	Env          string `json:"env"`
 	SpeadsheetID string `json:"speadsheet_id"`
 	Scopes       string `json:"scopes"`
 	SheetRange   string `json:"range"`
-}
-
-// Installed : Google Creds
-type Installed struct {
-	ClientID     string `json:"client_id"`
-	ProjectID    string `json:"project_id"`
-	AuthURI      string `json:"auth_uri"`
-	TokenURI     string `json:"token_uri"`
-	AuthProvider string `json:"auth_provider_x509_cert_url"`
-	ClientSecret string `json:"client_secret"`
-	RedirectURIs string `json:"redirect_uris"`
-}
-
-// KalturaSettings : Kaltura Classroom local settings
-type KalturaSettings struct {
-	ResourceID   string `json:"resourceID"`
-	LaunchSilent string `json:"luanch_silent"`
-	Countdown    string `json:"countdown"`
 }
 
 // Retrieve a token, saves the token, then returns the generated client.
@@ -102,9 +63,9 @@ func tokenFromFile(file string) (*oauth2.Token, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	
 	defer f.Close()
-
+	
 	tok := &oauth2.Token{}
 	err = json.NewDecoder(f).Decode(tok)
 	return tok, err
@@ -189,10 +150,10 @@ func main() {
 
 	config := getConfig()
 
-	if config.SheetConfig.Env == "dev" {
+	if config.Env == "dev" {
 		serialNumber = []byte("3WFZBH2")
 		localSettingsPath = []byte("localSettings.json")
-	} else if config.SheetConfig.Env == "prod" {
+	} else if config.Env == "prod" {
 
 		// Find the Kaltura local settings
 		houstonsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
@@ -208,7 +169,7 @@ func main() {
 			log.Fatal(err)
 		}
 	} else {
-		log.Println(config.SheetConfig.Env)
+		log.Println(config.Env)
 		log.Fatal("[ERROR] unknown 'Env' in configuration file (must be 'dev' or 'prod') or environment variables not set properly")
 	}
 
@@ -230,7 +191,7 @@ func main() {
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	gConfig, err := google.ConfigFromJSON(b, config.SheetConfig.Scopes)
+	gConfig, err := google.ConfigFromJSON(b, config.Scopes)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
@@ -241,7 +202,7 @@ func main() {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	resp, err := srv.Spreadsheets.Values.Get(config.SheetConfig.SpeadsheetID, config.SheetConfig.SheetRange).Do()
+	resp, err := srv.Spreadsheets.Values.Get(config.SpeadsheetID, config.SheetRange).Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve data from sheet: %v", err)
 	}
@@ -257,8 +218,8 @@ func main() {
 					row[20] = resourceID
 
 					_, err := srv.Spreadsheets.Values.Update(
-						config.SheetConfig.SpeadsheetID,
-						config.SheetConfig.SheetRange,
+						config.SpeadsheetID,
+						config.SheetRange,
 						resp,
 					).ValueInputOption("USER_ENTERED").Do()
 
@@ -271,9 +232,9 @@ func main() {
 				} else if intRow, _ := strconv.Atoi(row[20].(string)); intRow != resourceID {
 					log.Println("[INFO] changing local settings to reflect spreadsheet")
 
-					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _ = strconv.Atoi(row[20].(string))
+					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _= strconv.Atoi(row[20].(string))
 
-					// TODO: Update kaltura json
+					// Update kaltura json
 					updateKalturaSettings(localSettingsPath, kaltura)
 
 				} else {
