@@ -1,31 +1,6 @@
 {
-    "binary_parameters": {
-        "url" : "https://choco.lcc.ts.vcu.edu/files/bin/zip/vcuKalturaClassroom_3.2.74.zip",
-        "checksum" : "",
-        "file_location" : "C:\\VCU-Deploy\\bin\\Kaltura Classroom\\setup.msi"
-    },
-
-    "install_parameters": {
-        "silent": "yes",
-        "install_dir": "T:\\Kaltura\\Classroom",
-        "recording_dir": "T:\\Kaltura\\Classroom\\Recordings",
-        "url": "https://www.kaltura.com/",
-        "apptoken": "b17a48a9551d8b44076004458c3226a9",
-        "apptoken_id": "1_3ma5nq5l",
-        "partner_id": "1888231",
-        "desktop_shortcut": "no",
-        "program_shortcut": "yes"
-    },
-
-    "google_sheet_config": {
-        "speadsheet_id": "1WG9lDcABDF0FU84QofkgAWoilzEedt2mjibTBKHr7Rs",
-        "scopes": "https://www.googleapis.com/auth/spreadsheets",
-        "range": "Sheet1!A1:V1000"
-    },
-
-    "kaltura_classroom_localsettings": {
-        "resourceID": "132456",
-        "launch_silent": "yes",
-        "countdown": ""
-    }
+    "env": "dev",
+    "speadsheet_id": "1WG9lDcABDF0FU84QofkgAWoilzEedt2mjibTBKHr7Rs",
+    "scopes": "https://www.googleapis.com/auth/spreadsheets",
+    "range": "Sheet1!A1:V1000"
 }

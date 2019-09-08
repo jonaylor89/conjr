@@ -3,107 +3,132 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"http"
-	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 
+	"golang.org/x/net/context"
+	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/sheets/v4"
 )
 
-// Config : Global Configuration
+// Config : Configuration file structure
 type Config struct {
-	BinaryParameters  *BinaryParameters  `json:"binary_parameters"`
-	InstallParameters *InstallParameters `json:"install_parameters"`
-	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
-	KalturaSettings   *KalturaSettings   `json:"kaltura_classroomn_localsettings"`
-}
-
-// BinaryParameters : Parameters to download kaltura binary
-type BinaryParameters struct {
-	URL          string `json:"url"`
-	Checksum     string `json:"checksum"`
-	FileLocation string `json:"file_location"`
-}
-
-// InstallParameters : PostInstall Cconfiguration settings
-type InstallParameters struct {
-	Silent          string `json:"silent"`
-	InstallDir      string `json:"install_dir"`
-	RecordingDir    string `json:"recording_dir"`
-	URL             string `json:"url"`
-	AppToken        string `json:"apptoken"`
-	AppTokenID      string `json:"apptoken_id"`
-	PartnerID       string `json:"partner_id"`
-	DesktopShortcut string `json:"desktop_shortcut"`
-	ProgramShortcut string `json:"program_shortcut"`
-}
-
-// SheetConfig : Configuration for google sheet
-type SheetConfig struct {
 	Env          string `json:"env"`
 	SpeadsheetID string `json:"speadsheet_id"`
 	Scopes       string `json:"scopes"`
 	SheetRange   string `json:"range"`
 }
 
-// KalturaSettings : Kaltura Classroom local settings
-type KalturaSettings struct {
-	ResourceID   string `json:"resourceID"`
-	LaunchSilent string `json:"luanch_silent"`
-	Countdown    string `json:"countdown"`
+// Retrieve a token, saves the token, then returns the generated client.
+func getClient(config *oauth2.Config) *http.Client {
+	// The file token.json stores the user's access and refresh tokens, and is
+	// created automatically when the authorization flow completes for the first
+	// time.
+	tokFile := "token.json"
+	tok, err := tokenFromFile(tokFile)
+	if err != nil {
+		tok = getTokenFromWeb(config)
+		saveToken(tokFile, tok)
+	}
+	return config.Client(context.Background(), tok)
+}
+
+// Request a token from the web, then returns the retrieved token.
+func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
+	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	fmt.Printf("Go to the following link in your browser then type the "+
+		"authorization code: \n%v\n", authURL)
+
+	var authCode string
+	if _, err := fmt.Scan(&authCode); err != nil {
+		log.Fatalf("[ERROR] unable to read authorization code: %v", err)
+	}
+
+	tok, err := config.Exchange(context.TODO(), authCode)
+	if err != nil {
+		log.Fatalf("[ERROR] unable to retrieve token from web: %v", err)
+	}
+	return tok
+}
+
+// Retrieves a token from a local file.
+func tokenFromFile(file string) (*oauth2.Token, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+	
+	defer f.Close()
+	
+	tok := &oauth2.Token{}
+	err = json.NewDecoder(f).Decode(tok)
+	return tok, err
+}
+
+// Saves a token to a file path.
+func saveToken(path string, token *oauth2.Token) {
+	fmt.Printf("Saving credential file to: %s\n", path)
+	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
+	if err != nil {
+		log.Fatalf("Unable to cache oauth token: %v", err)
+	}
+	defer f.Close()
+	json.NewEncoder(f).Encode(token)
 }
 
 // Grabs the kaltura configuration file
-func getKalturaConfig(path string) map[string]interface{}, error {
+func getKalturaConfig(path string) map[string]interface{} {
 
 	var kaltura map[string]interface{}
 
 	// Open our jsonFile
 	jsonFile, err := os.Open(path)
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
-	log.Println("[INFO] successfully opened localSettings")
+	log.Println("[INFO] successfully Opened localSettings")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
 
-	// read our opened jsonFile as a byte array.
+	// read our opened xmlFile as a byte array.
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	// we unmarshal our byteArray which contains our
 	// json file's content into 'config' which we defined above
 	json.Unmarshal(byteValue, &kaltura)
 
-	return kaltura, nil
+	return kaltura
 }
 
-func updateKalturaSettings(path string, newSettings map[string]interface{}) error {
+func updateKalturaSettings(path []byte, newSettings map[string]interface{}) {
 
 	marshalledSettings, _ := json.MarshalIndent(newSettings, "", "\t")
-	err := ioutil.WriteFile(path, marshalledSettings, 0644)
+	err := ioutil.WriteFile(string(path), marshalledSettings, 0644)
 
-	return err
+	if err != nil {
+		log.Println("[ERROR] new kaltura config couldn't be written to")
+	}
 }
 
-func getConfig() (*Config, error) {
+func getConfig() *Config {
 
 	var config Config
 
 	// Open our jsonFile
 	jsonFile, err := os.Open("config.json")
 	if err != nil {
-		return nil, err
+		log.Fatal(err)
 	}
 
-	log.Println("[INFO] successfully opened config.json")
+	log.Println("[INFO] Successfully Opened config.json")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
@@ -115,150 +140,86 @@ func getConfig() (*Config, error) {
 	// jsonFile's content into 'config' which we defined above
 	json.Unmarshal(byteValue, &config)
 
-	return &config, nil
+	return &config
 }
-
-// DownloadFile will download a url to a local file
-func DownloadFile(filepath string, url string) error {
-
-    // Get the data
-    resp, err := http.Get(url)
-    if err != nil {
-        return err
-    }
-    defer resp.Body.Close()
-
-    // Create the file
-    out, err := os.Create(filepath)
-    if err != nil {
-        return err
-    }
-    defer out.Close()
-
-    // Write the body to file
-    _, err = io.Copy(out, resp.Body)
-    return err
-}
-
-func installMSI(binParams *BinaryParameters, installParams *InstallParameters) error {
-
-	// Download Binary
-	err := downloadFile(binParam.FileLocation, binParam.URL)
-	if err != nil {
-		return err
-	}
-
-	tmplString := `/i %s /qn /norestart
-		INSTALLDIR=%s
-		ADDLOCAL=ALL
-		KALTURA_RECORDINGS_DIR=%s
-		KALTURA_URL=%s
-		KALTURA_APPTOKEN=%s
-		KALTURA_APPTOKEN_ID=%s
-		KALTURA_PARTNER_ID=%s
-		INSTALLDESKTOPSHORTCUT=%s
-		INSTALLPROGRAMSSHORTCUT=%s
-	`
-	installString := fmt.Sprintf(tmplString,
-		binParams.FileLocation,
-		installParams.InstallDir,
-		installParams.RecordingDir,
-		installParams.URL,
-		installParams.AppToken,
-		installParams.AppTokenID,
-		installParams.DesktopShortcut,
-		installParams.ProgramShortcut,
-	)
-
-	cmd := exec.Command("msiexec.exe", installString)
-	if err := cmd.Run(); err != nil {
-		fmt.Println("[ERROR] could not install kaltura")
-		return err
-	}
-
-	return nil
-}
-
-// func createLocalSettings(binParams BinaryParameters, installParams InstallParameters) error
 
 func main() {
 
-	// Find the Kaltura local settings
-	localSettingsPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\localSettings.json")
+	var serialNumber []byte
+	var localSettingsPath []byte
 
-	serialNumber, err := exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
-	if err != nil {
-		log.Fatal(err)
+	config := getConfig()
+
+	if config.Env == "dev" {
+		serialNumber = []byte("3WFZBH2")
+		localSettingsPath = []byte("localSettings.json")
+	} else if config.Env == "prod" {
+
+		// Find the Kaltura local settings
+		houstonsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
+
+		var err error
+		localSettingsPath, err = exec.Command("powershell.exe", houstonsConfigPath).Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		serialNumber, err = exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
+		if err != nil {
+			log.Fatal(err)
+		}
+	} else {
+		log.Println(config.Env)
+		log.Fatal("[ERROR] unknown 'Env' in configuration file (must be 'dev' or 'prod') or environment variables not set properly")
 	}
 
-	// Make sure Google credentials file exists
+	if _, err := os.Stat(string(localSettingsPath)); err != nil {
+		log.Fatal("[ERROR] unable to find kaltura local settings (localSettings.json)")
+	}
+
+	// Grab kaltura settings
+	kaltura := getKalturaConfig(string(localSettingsPath))
+	resourceID := int(((kaltura["config"].(map[string]interface{}))["shared"].(map[string]interface{}))["resourceId"].(float64))
+
 	if _, err := os.Stat("credentials.json"); err != nil {
 		log.Fatal("[ERROR] missing Google API credentials (credentials.json)")
 	}
 
-	// Make sure localSettings config file exists
-	if _, err := os.Stat(localSettingsPath); err != nil {
-		log.Fatal("[ERROR] unable to find kaltura local settings (localSettings.json)")
-	}
-
-	// Serialize JSON config file
-	config, err := getConfig()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Download and Install Kaltura Classroom MSI
-	err = installMSI(config.BinaryParameters, config.InstallParameters)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	// Grab kaltura settings
-	kaltura, err := getKalturaConfig(string(localSettingsPath))
-	if err != nil {
-		log.Fatal(err)
-	}
-	
-	resourceID := int(((kaltura["config"].(map[string]interface{}))["shared"].(map[string]interface{}))["resourceId"].(float64))
-
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
-		log.Fatalf("unable to read client secret file: %v\n", err)
+		log.Fatalf("Unable to read client secret file: %v", err)
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	gConfig, err := google.ConfigFromJSON(b, config.SheetConfig.Scopes)
+	gConfig, err := google.ConfigFromJSON(b, config.Scopes)
 	if err != nil {
-		log.Fatalf("unable to parse client secret file to config: %v\n", err)
+		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
-
 	client := getClient(gConfig)
 
 	srv, err := sheets.New(client)
 	if err != nil {
-		log.Fatalf("unable to retrieve Sheets client: %v\n", err)
+		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	resp, err := srv.Spreadsheets.Values.Get(config.SheetConfig.SpeadsheetID, config.SheetConfig.SheetRange).Do()
+	resp, err := srv.Spreadsheets.Values.Get(config.SpeadsheetID, config.SheetRange).Do()
 	if err != nil {
-		log.Fatalf("unable to retrieve data from sheet: %v\n", err)
+		log.Fatalf("Unable to retrieve data from sheet: %v", err)
 	}
 
 	// Make sure there is data
 	if len(resp.Values) == 0 {
 		log.Fatal("[ERROR] No data found.")
 	} else {
-		for i, row := range resp.Values {
-
-			// Serial Number is already in google sheet
+		for _, row := range resp.Values {
 			if row[0].(string) == string(serialNumber) {
 				temp, _ := strconv.Atoi(row[20].(string))
 				if temp != resourceID && temp == 0 {
 					row[20] = resourceID
 
-					result, err := srv.Spreadsheets.Values.Update(
-						config.SheetConfig.SpeadsheetID,
-						config.SheetConfig.SheetRange,
+					_, err := srv.Spreadsheets.Values.Update(
+						config.SpeadsheetID,
+						config.SheetRange,
 						resp,
 					).ValueInputOption("USER_ENTERED").Do()
 
@@ -266,73 +227,21 @@ func main() {
 						log.Fatalf("unable to update sheet %v", err)
 					}
 
-					log.Printf("[INFO] %d cells updated\n", result.UpdatedCells)
+					log.Println("[INFO] cells updated")
 					return
 				} else if intRow, _ := strconv.Atoi(row[20].(string)); intRow != resourceID {
 					log.Println("[INFO] changing local settings to reflect spreadsheet")
 
-					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], err = strconv.Atoi(row[20].(string))
-					if err != nil {
-						log.Fatal(err)
-					}
+					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _= strconv.Atoi(row[20].(string))
 
-					err = updateKalturaSettings(localSettingsPath, kaltura)
-					if err != nil {
-						log.Fatal(err)
-					}
-
-					return
+					// TODO: Update kaltura json
+					updateKalturaSettings(localSettingsPath, kaltura)
 
 				} else {
-					log.Printf("[INFO] %d.) nothing to change for %s\n", i, row[0].(string))
-
+					log.Println("[INFO] nothing to change for " + row[0].(string))
 					return
 				}
 			}
 		}
-
-		// Serial Number isn't in google sheet
-		// Add Serial Number to google sheet
-
-		rb := &sheets.ValueRange{
-			Values: [][]string{
-				{
-					serialNumber, 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"",
-					resourceID,
-				},
-			}
-		}
-
-		resp, err = srv.SpreadSheet.Values.Append(
-			config.SheetConfig.SpeadsheetID,
-			config.SheetConfig.SheetRange,
-			rb,
-		).ValueInputOption("USER_ENTERED").Do()
-
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		log.Printf("[INFO] serial Number (%s) added to the googlesheet\n", serialNumber)
-		log.Println(resp)
-
 	}
 }
