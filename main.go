@@ -25,63 +25,6 @@ type Config struct {
 	SheetRange   string `json:"range"`
 }
 
-// Retrieve a token, saves the token, then returns the generated client.
-func getClient(config *oauth2.Config) *http.Client {
-	// The file token.json stores the user's access and refresh tokens, and is
-	// created automatically when the authorization flow completes for the first
-	// time.
-	tokFile := "token.json"
-	tok, err := tokenFromFile(tokFile)
-	if err != nil {
-		tok = getTokenFromWeb(config)
-		saveToken(tokFile, tok)
-	}
-	return config.Client(context.Background(), tok)
-}
-
-// Request a token from the web, then returns the retrieved token.
-func getTokenFromWeb(config *oauth2.Config) *oauth2.Token {
-	authURL := config.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
-	fmt.Printf("Go to the following link in your browser then type the "+
-		"authorization code: \n%v\n", authURL)
-
-	var authCode string
-	if _, err := fmt.Scan(&authCode); err != nil {
-		log.Fatalf("[ERROR] unable to read authorization code: %v", err)
-	}
-
-	tok, err := config.Exchange(context.TODO(), authCode)
-	if err != nil {
-		log.Fatalf("[ERROR] unable to retrieve token from web: %v", err)
-	}
-	return tok
-}
-
-// Retrieves a token from a local file.
-func tokenFromFile(file string) (*oauth2.Token, error) {
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	
-	defer f.Close()
-	
-	tok := &oauth2.Token{}
-	err = json.NewDecoder(f).Decode(tok)
-	return tok, err
-}
-
-// Saves a token to a file path.
-func saveToken(path string, token *oauth2.Token) {
-	fmt.Printf("Saving credential file to: %s\n", path)
-	f, err := os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
-	if err != nil {
-		log.Fatalf("Unable to cache oauth token: %v", err)
-	}
-	defer f.Close()
-	json.NewEncoder(f).Encode(token)
-}
-
 // Grabs the kaltura configuration file
 func getKalturaConfig(path string) map[string]interface{} {
 
@@ -141,6 +84,42 @@ func getConfig() *Config {
 	json.Unmarshal(byteValue, &config)
 
 	return &config
+}
+
+
+func installMSI(binParams *BinaryParameters, installParams *InstallParameters) error {
+
+	// TODO: Download Binary
+
+	tmplString := `/i %s /qn /norestart
+		INSTALLDIR=%s
+		ADDLOCAL=ALL
+		KALTURA_RECORDINGS_DIR=%s
+		KALTURA_URL=%s
+		KALTURA_APPTOKEN=%s
+		KALTURA_APPTOKEN_ID=%s
+		KALTURA_PARTNER_ID=%s
+		INSTALLDESKTOPSHORTCUT=%s
+		INSTALLPROGRAMSSHORTCUT=%s
+	`
+	installString := fmt.Sprintf(tmplString,
+		binParams.FileLocation,
+		installParams.InstallDir,
+		installParams.RecordingDir,
+		installParams.URL,
+		installParams.AppToken,
+		installParams.AppTokenID,
+		installParams.DesktopShortcut,
+		installParams.ProgramShortcut,
+	)
+
+	cmd := exec.Command("msiexec.exe", installString)
+	if err := cmd.Run(); err != nil {
+		fmt.Println("[ERROR] could not install kaltura")
+		return err
+	}
+
+	return nil 
 }
 
 func main() {
@@ -243,5 +222,52 @@ func main() {
 				}
 			}
 		}
+<<<<<<< HEAD
+=======
+
+		// Serial Number isn't in google sheet
+		// Add Serial Number to google sheet
+
+		rb := &sheets.ValueRange{
+			Values: [][]string{
+				{
+					serialNumber, 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"", 
+					"",
+					resourceID,
+				},
+			}
+		}
+
+		resp, err = srv.SpreadSheet.Values.Append(
+			config.SheetConfig.SpeadsheetID,
+			config.SheetConfig.SheetRange,
+			rb,
+		).ValueInputOption("USER_ENTERED").Do()
+
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("Serial Number (%s) added to the googlesheet\n", serialNumber)
+		fmt.Println(resp)
+
+>>>>>>> parent of 51ef285... Download binary
 	}
 }
