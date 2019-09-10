@@ -21,7 +21,7 @@ import (
 type Config struct {
 	InstallParameters *InstallParameters `json:"install_parameters"`
 	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
-	BinaryParameters         *BinaryParameters         `json:"binary_parameters"`
+	BinaryParameters  *BinaryParameters  `json:"binary_parameters"`
 	KalturaSettings   *KalturaSettings   `json:"kaltura_classroomn_localsettings"`
 }
 
