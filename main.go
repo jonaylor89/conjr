@@ -2,8 +2,11 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -13,12 +16,48 @@ import (
 	"google.golang.org/api/sheets/v4"
 )
 
+// Config : Global Configuration
 // Config : Configuration file structure
 type Config struct {
-	Env          string `json:"env"`
-	SpeadsheetID string `json:"speadsheet_id"`
-	Scopes       string `json:"scopes"`
-	SheetRange   string `json:"range"`
+	InstallParameters *InstallParameters `json:"install_parameters"`
+	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
+	Installed         *Installed         `json:"installed"`
+	KalturaSettings   *KalturaSettings   `json:"kaltura_classroomn_localsettings"`
+}
+
+// InstallParameters : PostInstall Cconfiguration settings
+type InstallParameters struct {
+	Silent          string `json:"silent"`
+	InstallDir      string `json:"install_dir"`
+	RecordingDir    string `json:"recording_dir"`
+	URL             string `json:"url"`
+	AppToken        string `json:"apptoken"`
+	AppTokenID      string `json:"apptoken_id"`
+	PartnerID       string `json:"partner_id"`
+	DesktopShortcut string `json:"desktop_shortcut"`
+	ProgramShortcut string `json:"program_shortcut"`
+}
+
+// BinaryParameters : Parameters to download kaltura binary
+type BinaryParameters struct {
+	URL          string `json:"url"`
+	Checksum     string `json:"checksum"`
+	FileLocation string `json:"file_location"`
+}
+
+// SheetConfig : Configuration for google sheet
+type SheetConfig struct {
+	Env           string `json:"env"`
+	SpreadsheetID string `json:"speadsheet_id"`
+	Scopes        string `json:"scopes"`
+	SheetRange    string `json:"range"`
+}
+
+// KalturaSettings : Kaltura Classroom local settings
+type KalturaSettings struct {
+	ResourceID   string `json:"resourceID"`
+	LaunchSilent string `json:"luanch_silent"`
+	Countdown    string `json:"countdown"`
 }
 
 // Grabs the kaltura configuration file
@@ -47,24 +86,26 @@ func getKalturaConfig(path string) map[string]interface{} {
 	return kaltura
 }
 
-func updateKalturaSettings(path []byte, newSettings map[string]interface{}) {
+func updateKalturaSettings(path []byte, newSettings map[string]interface{}) error {
 
 	marshalledSettings, _ := json.MarshalIndent(newSettings, "", "\t")
 	err := ioutil.WriteFile(string(path), marshalledSettings, 0644)
 
 	if err != nil {
-		log.Println("[ERROR] new kaltura config couldn't be written to")
+		return err
 	}
+
+	return nil
 }
 
-func getConfig() *Config {
+func getConfig() (*Config, error) {
 
 	var config Config
 
 	// Open our jsonFile
 	jsonFile, err := os.Open("config.json")
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	log.Println("[INFO] Successfully Opened config.json")
@@ -79,13 +120,38 @@ func getConfig() *Config {
 	// jsonFile's content into 'config' which we defined above
 	json.Unmarshal(byteValue, &config)
 
-	return &config
+	return &config, nill
 }
 
+// downloadFile will download a url to a local file
+func downloadFile(filepath string, url string) error {
+
+	// Get the data
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	// Create the file
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
 
 func installMSI(binParams *BinaryParameters, installParams *InstallParameters) error {
 
-	// TODO: Download Binary
+	// Download Binary
+	err := downloadFile(binParam.FileLocation, binParam.URL)
+	if err != nil {
+		return err
+	}
 
 	tmplString := `/i %s /qn /norestart
 		INSTALLDIR=%s
@@ -115,7 +181,7 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		return err
 	}
 
-	return nil 
+	return nil
 }
 
 func main() {
@@ -123,29 +189,22 @@ func main() {
 	var serialNumber []byte
 	var localSettingsPath []byte
 
-	config := getConfig()
+	config, err := getConfig()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	if config.Env == "dev" {
-		serialNumber = []byte("3WFZBH2")
-		localSettingsPath = []byte("localSettings.json")
-	} else if config.Env == "prod" {
+	// Find the Kaltura local settings
+	houstonsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
 
-		// Find the Kaltura local settings
-		houstonsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
+	localSettingsPath, err = exec.Command("powershell.exe", houstonsConfigPath).Output()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		var err error
-		localSettingsPath, err = exec.Command("powershell.exe", houstonsConfigPath).Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		serialNumber, err = exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
-		if err != nil {
-			log.Fatal(err)
-		}
-	} else {
-		log.Println(config.Env)
-		log.Fatal("[ERROR] unknown 'Env' in configuration file (must be 'dev' or 'prod') or environment variables not set properly")
+	serialNumber, err = exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if _, err := os.Stat(string(localSettingsPath)); err != nil {
@@ -166,7 +225,7 @@ func main() {
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
-	gConfig, err := google.ConfigFromJSON(b, config.Scopes)
+	gConfig, err := google.ConfigFromJSON(b, config.SheetConfig.Scopes)
 	if err != nil {
 		log.Fatalf("Unable to parse client secret file to config: %v", err)
 	}
@@ -177,7 +236,7 @@ func main() {
 		log.Fatalf("Unable to retrieve Sheets client: %v", err)
 	}
 
-	resp, err := srv.Spreadsheets.Values.Get(config.SpeadsheetID, config.SheetRange).Do()
+	resp, err := srv.Spreadsheets.Values.Get(config.SheetConfig.SpreadsheetID, config.SheetConfig.SheetRange).Do()
 	if err != nil {
 		log.Fatalf("Unable to retrieve data from sheet: %v", err)
 	}
@@ -193,8 +252,8 @@ func main() {
 					row[20] = resourceID
 
 					_, err := srv.Spreadsheets.Values.Update(
-						config.SpeadsheetID,
-						config.SheetRange,
+						config.SheetConfig.SpreadsheetID,
+						config.SheetConfig.SheetRange,
 						resp,
 					).ValueInputOption("USER_ENTERED").Do()
 
@@ -207,7 +266,7 @@ func main() {
 				} else if intRow, _ := strconv.Atoi(row[20].(string)); intRow != resourceID {
 					log.Println("[INFO] changing local settings to reflect spreadsheet")
 
-					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _= strconv.Atoi(row[20].(string))
+					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _ = strconv.Atoi(row[20].(string))
 
 					// TODO: Update kaltura json
 					updateKalturaSettings(localSettingsPath, kaltura)
@@ -218,8 +277,6 @@ func main() {
 				}
 			}
 		}
-<<<<<<< HEAD
-=======
 
 		// Serial Number isn't in google sheet
 		// Add Serial Number to google sheet
@@ -227,32 +284,32 @@ func main() {
 		rb := &sheets.ValueRange{
 			Values: [][]string{
 				{
-					serialNumber, 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
-					"", 
+					serialNumber,
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
+					"",
 					"",
 					resourceID,
 				},
-			}
+			},
 		}
 
 		resp, err = srv.SpreadSheet.Values.Append(
-			config.SheetConfig.SpeadsheetID,
+			config.SheetConfig.SpreadsheetID,
 			config.SheetConfig.SheetRange,
 			rb,
 		).ValueInputOption("USER_ENTERED").Do()
@@ -264,6 +321,5 @@ func main() {
 		fmt.Printf("Serial Number (%s) added to the googlesheet\n", serialNumber)
 		fmt.Println(resp)
 
->>>>>>> parent of 51ef285... Download binary
 	}
 }
