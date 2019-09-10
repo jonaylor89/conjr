@@ -234,7 +234,7 @@ func main() {
 
 					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _= strconv.Atoi(row[20].(string))
 
-					// Update kaltura json
+					// TODO: Update kaltura json
 					updateKalturaSettings(localSettingsPath, kaltura)
 
 				} else {
