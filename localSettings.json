@@ -1,7 +1,134 @@
 {
 	"config": {
-		"shared": {
-			"resourceId": 20
+	  "shared": {
+		"appType": "cc",
+		"partnerId":"1888231",
+		"serviceUrl":"https://www.kaltura.com/",
+		"appToken":"b17a48a9551d8b44076004458c3226a9",
+		"appTokenId":"1_3ma5nq5l",
+		"recordingsDir":"$recordingDirLocal",
+		"logsDir":"$logsDirLocal",
+		"resourceId": {{ resourceID }},
+		"resourceName": "$env:COMPUTERNAME",
+		"session_duration": 43200,
+		"monitoring":{
+		  "enabled": true,
+		  "uploadPreviewIntervalSec": 60,
+		  "dataReportingIntervalSec": 30,
+		  "PreviewImageMaxWidth": 256,
+		  "PreviewImageMaxHeight": 144
+		},
+		"launchDevTools": false,
+		"heapMonitor" : {
+		  "enabled" : false,
+		  "pollInterval" : 300000,
+		  "autoStart":  true,
+		  "heapMinDiffKB": 0
 		}
+	  },
+	  "captureApp": {
+		"userId": "",
+		"crashDump": "mini",
+		"crashUrl": "https://crash-reports.kaltura.com/post",
+		"defaultRecordingName": "$defaultRecordingName",
+		"notificationOffSetPosition" : 0,
+		"allowInfoNotifications" : true,
+		"silentStart": true,
+		"LoadUploaderInApp": false,
+		"audioOnlyRecording" : false,
+		"reloadProcessDelayTimeSec": 30,
+		"manualUpload": false,
+		"recording": {
+		  "minimizeWhenRecordingStarts": false,
+		  "minimizeRecordingDelaySec": 10,
+		  "adHockCountdownBeforeStart": true,
+		  "scheduledCountdownBeforeStart": true,
+		  "countdownTime": 10
+		},
+		"limits": {
+		  "video": {
+			"maxFPS": 60,
+			"minFPS": 5,
+			"defaultFPS": 30,
+			"defaultHeight": 1080
+		  },
+		  "screen": {
+			"maxFPS": 30,
+			"minFPS": 5,
+			"defaultFPS": 20
+		  }
+		},
+		"systemHealth": {
+		  "sampleIntervalSec": 10,
+		  "maxCpuPercentage": 90,
+		  "minMemoryGB": 2,
+		  "minDiskspaceGB": 20,
+		  "minDiskspaceLeftMB": 500,
+		  "numSamplesToAlertAfter": 3
+		},
+		"scheduling": {
+		  "enabled" : true,
+		  "intervalSec": 300,
+		  "extendEventInSec": 300,
+		  "countdownInSec" : 600,
+		  "recTerminationInSec": 30,
+		  "eventEndNotificationInSec": 600,
+		  "displayExtendEventInSec": 600,
+		  "viewEventsAheadDay": 14
+		},
+		"notifications": {
+		  "displayTime": {
+			"info-sticky" : 0,
+			"error": 0,
+			"warn": 3000,
+			"success": 3000,
+			"info": 3000
+		  }
+		},
+		"deviceTypeMapping": {
+		  "video": "primary",
+		  "screen": "secondary",
+		  "audio": "audio"
+		}
+	  },
+	  "uploadService": {
+		"logLevel": "info",
+		"httpProxy": "",
+		"completedFilesDir": "$completedDirLocal",
+		"chunkSize": 10000000,
+		"maxParallelChunks": 10,
+		"maxParallelFiles": 1,
+		"maxRetriesCount": 5,
+		"timeoutBetweenCalls": 10000,
+		"uploadErrorRetryTime": 10000,
+		"timeoutForChunkUploadInSec": 600,
+		"PostUploadAction": "move"
+	  },
+	  "captureEngine": {
+		"logLevel": "info",
+		"logTruncate": false,
+		"logFileMaxSize": 10485760,
+		"logMaxFileCount": 10,
+		"maxQueuedSamplesCount": 1000,
+		"maxQueuedVideoSamplesCount": 30,
+		"gopLength": 2000,
+		"deviceBlackList": [
+		  "Blackmagic"
+		],
+		"encoderBlackList": [],
+		"mediaTypeBlackList":[],
+		"enableTimeAligning": true,
+		"d3dDebugDevice": false,
+		"maxEVRQueueDurationInMsec" :  1000,
+		"captureSystemAudio": false,
+		"capturePowerPoint": true,
+		"thumbnail":{
+		  "enable": false,
+		  "maxWidth": 320,
+		  "maxHeight": 240
+		},
+		"MoveSamplesTSToZero": false,
+		"callTimeoutMsec":60000
+	  }
 	}
 }
