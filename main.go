@@ -21,7 +21,7 @@ import (
 type Config struct {
 	InstallParameters *InstallParameters `json:"install_parameters"`
 	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
-	Installed         *Installed         `json:"installed"`
+	BinaryParameters         *BinaryParameters         `json:"binary_parameters"`
 	KalturaSettings   *KalturaSettings   `json:"kaltura_classroomn_localsettings"`
 }
 
@@ -120,7 +120,7 @@ func getConfig() (*Config, error) {
 	// jsonFile's content into 'config' which we defined above
 	json.Unmarshal(byteValue, &config)
 
-	return &config, nill
+	return &config, nil
 }
 
 // downloadFile will download a url to a local file
@@ -148,7 +148,7 @@ func downloadFile(filepath string, url string) error {
 func installMSI(binParams *BinaryParameters, installParams *InstallParameters) error {
 
 	// Download Binary
-	err := downloadFile(binParam.FileLocation, binParam.URL)
+	err := downloadFile(binParams.FileLocation, binParams.URL)
 	if err != nil {
 		return err
 	}
@@ -282,33 +282,33 @@ func main() {
 		// Add Serial Number to google sheet
 
 		rb := &sheets.ValueRange{
-			Values: [][]string{
+			Values: [][]interface{}{
 				{
 					serialNumber,
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
-					"",
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
+					nil,
 					resourceID,
 				},
 			},
 		}
 
-		resp, err = srv.SpreadSheet.Values.Append(
+		r, err := srv.Spreadsheets.Values.Append(
 			config.SheetConfig.SpreadsheetID,
 			config.SheetConfig.SheetRange,
 			rb,
@@ -319,7 +319,7 @@ func main() {
 		}
 
 		fmt.Printf("Serial Number (%s) added to the googlesheet\n", serialNumber)
-		fmt.Println(resp)
+		fmt.Println(r)
 
 	}
 }
