@@ -17,7 +17,6 @@ import (
 )
 
 // Config : Global Configuration
-// Config : Configuration file structure
 type Config struct {
 	InstallParameters *InstallParameters `json:"install_parameters"`
 	SheetConfig       *SheetConfig       `json:"google_sheet_config"`
