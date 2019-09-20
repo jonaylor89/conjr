@@ -70,7 +70,7 @@ func getKalturaConfig(path string) map[string]interface{} {
 		log.Fatal(err)
 	}
 
-	log.Println("[INFO] successfully Opened localSettings")
+	log.Println("[INFO] successfully opened localSettings")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
@@ -107,7 +107,7 @@ func getConfig() (*Config, error) {
 		return nil, err
 	}
 
-	log.Println("[INFO] Successfully Opened config.json")
+	log.Println("[INFO] successfully opened config.json")
 
 	// defer the closing of our jsonFile so that we can parse it later on
 	defer jsonFile.Close()
@@ -181,6 +181,84 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	}
 
 	return nil
+}
+
+func externalIP() (string, error) {
+	ifaces, err := net.Interfaces()
+
+	if err != nil {
+		return "", err
+	}
+
+	for _, iface := range ifaces {
+
+		if iface.Flags&net.FlagUp == 0 {
+			continue // interface down
+		}
+
+		if iface.Flags&net.FlagLoopback != 0 {
+			continue // loopback interface
+		}
+
+		addrs, err := iface.Addrs()
+		if err != nil {
+			return "", err
+		}
+
+		for _, addr := range addrs {
+			var ip net.IP
+
+			switch v := addr.(type) {
+
+			case *net.IPNet:
+				ip = v.IP
+			case *net.IPAddr:
+				ip = v.IP
+			}
+
+			if ip == nil || ip.IsLoopback() {
+				continue
+			}
+
+			ip = ip.To4()
+			if ip == nil {
+				continue // not an ipv4 address
+			}
+
+			return ip.String(), nil
+		}
+	}
+	return "", errors.New("are you connected to the network?")
+}
+
+func macUint64() (uint64, error) {
+    interfaces, err := net.Interfaces()
+    if err != nil {
+        return uint64(0), err
+    }
+
+    for _, i := range interfaces {
+        if i.Flags&net.FlagUp != 0 && bytes.Compare(i.HardwareAddr, nil) != 0 {
+
+            // Skip locally administered addresses
+            if i.HardwareAddr[0]&2 == 2 {
+                continue
+            }
+
+            var mac uint64
+            for j, b := range i.HardwareAddr {
+                if j >= 8 {
+                    break
+                }
+                mac <<= 8
+                mac += uint64(b)
+            }
+
+            return mac
+        }
+    }
+
+    return uint64(0), Error("couldn't get MAC address")
 }
 
 func main() {
@@ -280,6 +358,21 @@ func main() {
 		// Serial Number isn't in google sheet
 		// Add Serial Number to google sheet
 
+		hostname, err := os.Hostname()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		ip, err := externalIP() 
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		mac, err := macUint64()
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		rb := &sheets.ValueRange{
 			Values: [][]interface{}{
 				{
@@ -296,7 +389,7 @@ func main() {
 					nil,
 					nil,
 					nil,
-					nil,
+					hostname,
 					nil,
 					nil,
 					nil,

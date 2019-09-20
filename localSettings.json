@@ -8,7 +8,7 @@
 		"appTokenId":"1_3ma5nq5l",
 		"recordingsDir":"$recordingDirLocal",
 		"logsDir":"$logsDirLocal",
-		"resourceId": {{ resourceID }},
+		"resourceId": {{ .ResourceID }},
 		"resourceName": "$env:COMPUTERNAME",
 		"session_duration": 43200,
 		"monitoring":{
