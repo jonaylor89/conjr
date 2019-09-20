@@ -152,7 +152,7 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 
 	cmd := exec.Command("msiexec.exe", installString)
 	if err := cmd.Run(); err != nil {
-		fmt.Println("[ERROR] could not install kaltura")
+		log.Println("[ERROR] could not install kaltura")
 		return err
 	}
 
@@ -308,8 +308,8 @@ func main() {
 			log.Fatal(err)
 		}
 
-		fmt.Printf("Serial Number (%s) added to the googlesheet\n", serialNumber)
-		fmt.Println(r)
+		log.Printf("Serial Number (%s) added to the googlesheet\n", serialNumber)
+		log.Println(r)
 
 	}
 }
