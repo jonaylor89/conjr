@@ -191,29 +191,29 @@ func main() {
 	resourceID := int(((kaltura["config"].(map[string]interface{}))["shared"].(map[string]interface{}))["resourceId"].(float64))
 
 	if _, err := os.Stat("credentials.json"); err != nil {
-		log.Fatal("[ERROR] missing Google API credentials (credentials.json)")
+		log.Fatal("missing Google API credentials (credentials.json)")
 	}
 
 	b, err := ioutil.ReadFile("credentials.json")
 	if err != nil {
-		log.Fatalf("Unable to read client secret file: %v", err)
+		log.Fatalf("unable to read client secret file: %v", err)
 	}
 
 	// If modifying these scopes, delete your previously saved token.json.
 	gConfig, err := google.ConfigFromJSON(b, config.SheetConfig.Scopes)
 	if err != nil {
-		log.Fatalf("Unable to parse client secret file to config: %v", err)
+		log.Fatalf("unable to parse client secret file to config: %v", err)
 	}
 	client := getClient(gConfig)
 
 	srv, err := sheets.New(client)
 	if err != nil {
-		log.Fatalf("Unable to retrieve Sheets client: %v", err)
+		log.Fatalf("unable to retrieve Sheets client: %v", err)
 	}
 
 	resp, err := srv.Spreadsheets.Values.Get(config.SheetConfig.SpreadsheetID, config.SheetConfig.SheetRange).Do()
 	if err != nil {
-		log.Fatalf("Unable to retrieve data from sheet: %v", err)
+		log.Fatalf("unable to retrieve data from sheet: %v", err)
 	}
 
 	// Make sure there is data
@@ -308,7 +308,7 @@ func main() {
 			log.Fatal(err)
 		}
 
-		log.Printf("Serial Number (%s) added to the googlesheet\n", serialNumber)
+		log.Printf("[INFO] serial Number (%s) added to the googlesheet\n", serialNumber)
 		log.Println(r)
 
 	}

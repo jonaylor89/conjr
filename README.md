@@ -5,12 +5,12 @@
 ## TODO 
 
 - [_] Downlaod Kaltura Installer
-- [_] Install Kaltura Classroom
+- [x] Install Kaltura Classroom
     - Using custom string from configurations
 - [_] Run Kaltura classroom
 - [_] Close Kaltura classroom after 2 seconds
     - This'll generate localSettings.json to get the resourceID
-- [_] Add serial number to google sheet is it isn't already in there
+- [x] Add serial number to google sheet is it isn't already in there
     - Serial Number
     - ResourceID
     - Hostname
