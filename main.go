@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"time"
 
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/sheets/v4"
@@ -83,10 +84,10 @@ func getKalturaConfig(path string) map[string]interface{} {
 	return kaltura
 }
 
-func updateKalturaSettings(path []byte, newSettings map[string]interface{}) error {
+func updateKalturaSettings(path string, newSettings map[string]interface{}) error {
 
 	marshalledSettings, _ := json.MarshalIndent(newSettings, "", "\t")
-	err := ioutil.WriteFile(string(path), marshalledSettings, 0644)
+	err := ioutil.WriteFile(path, marshalledSettings, 0644)
 
 	if err != nil {
 		return err
@@ -161,29 +162,43 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 
 func main() {
 
-	var serialNumber []byte
-	var localSettingsPath []byte
-
 	config, err := getConfig()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Find the Kaltura local settings
-	houstonsConfigPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.ps1")
+	err = installMSI(config.BinaryParameters, config.InstallParameters)
+	if err != nil {
+		log.Fatal("failed to install kaltura", err)
+	}
 
-	localSettingsPath, err = exec.Command("powershell.exe", houstonsConfigPath).Output()
+	// Start kaltura:
+	kalturaPath := filepath.Join(config.InstallParameters.InstallDir, "kaltura.exe")
+	cmd := exec.Command(kalturaPath)
+	if err = cmd.Start(); err != nil {
+    	log.Fatal("failed to run kaltura", err)
+	}
+
+	time.Sleep(2 * time.Second)
+
+	// Kill it:
+	if err = cmd.Process.Kill(); err != nil {
+    	log.Fatal("failed to kill process: ", err)
+	}
+
+	// Kaltura config path
+	localSettingsPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.json")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	serialNumber, err = exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
+	serialNumber, err := exec.Command("powershell.exe", "gwmi win32_bios serialnumber | Select -ExpandProperty serialnumber").Output()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	if _, err := os.Stat(string(localSettingsPath)); err != nil {
-		log.Fatal("[ERROR] unable to find kaltura local settings (localSettings.json)")
+		log.Fatal("unable to find kaltura local settings (localSettings.json)")
 	}
 
 	// Grab kaltura settings
@@ -216,15 +231,19 @@ func main() {
 		log.Fatalf("unable to retrieve data from sheet: %v", err)
 	}
 
+	// Serial number is row[7]
+	// ResourceID is row[0]
+	// There should be an automated system to get these from the headers at some point
+
 	// Make sure there is data
 	if len(resp.Values) == 0 {
-		log.Fatal("[ERROR] No data found.")
+		log.Fatal("no data found.")
 	} else {
 		for _, row := range resp.Values {
-			if row[0].(string) == string(serialNumber) {
-				temp, _ := strconv.Atoi(row[20].(string))
+			if row[7].(string) == string(serialNumber) {
+				temp, _ := strconv.Atoi(row[0].(string))
 				if temp != resourceID && temp == 0 {
-					row[20] = resourceID
+					row[1] = resourceID
 
 					_, err := srv.Spreadsheets.Values.Update(
 						config.SheetConfig.SpreadsheetID,
@@ -238,23 +257,23 @@ func main() {
 
 					log.Println("[INFO] cells updated")
 					return
-				} else if intRow, _ := strconv.Atoi(row[20].(string)); intRow != resourceID {
+				} else if intRow, _ := strconv.Atoi(row[0].(string)); intRow != resourceID {
 					log.Println("[INFO] changing local settings to reflect spreadsheet")
 
-					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _ = strconv.Atoi(row[20].(string))
+					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _ = strconv.Atoi(row[0].(string))
 
 					// TODO: Update kaltura json
 					updateKalturaSettings(localSettingsPath, kaltura)
 
 				} else {
-					log.Println("[INFO] nothing to change for " + row[0].(string))
+					log.Println("[INFO] nothing to change for " + row[7].(string))
 					return
 				}
 			}
 		}
 
 		// Serial Number isn't in google sheet
-		// Add Serial Number to google sheet
+		// Add numbers to google sheet
 
 		hostname, err := os.Hostname()
 		if err != nil {
