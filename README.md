@@ -4,7 +4,7 @@
 
 ## TODO 
 
-- [_] Downlaod Kaltura Installer
+- [x] Downlaod Kaltura Installer
 - [x] Install Kaltura Classroom
     - Using custom string from configurations
 - [_] Run Kaltura classroom

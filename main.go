@@ -261,39 +261,34 @@ func main() {
 			log.Fatal(err)
 		}
 
-		// ip, err := externalIP() 
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
+		ip, err := externalIP() 
+		if err != nil {
+			log.Fatal(err)
+		}
 
-		// mac, err := macUint64()
-		// if err != nil {
-		// 	log.Fatal(err)
-		// }
+		mac, err := macUint64()
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		rb := &sheets.ValueRange{
 			Values: [][]interface{}{
 				{
-					serialNumber,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					hostname,
-					nil,
-					nil,
-					nil,
-					nil,
-					nil,
-					resourceID,
+					resourceID, // Resource ID
+					nil, // Campus
+					nil, // Building
+					nil, // Room
+					hostname, // Hostname
+					ip, // IP Address
+					mac, // Mac Address
+					serialNumber, // Serial Number
+					nil, // Domain
+					nil, // MBU
+					nil, // SBU
+					nil, // TBU
+					nil, // Primary Contact
+					nil, // Secondary Contact
+					nil, // Backup Contact
 				},
 			},
 		}
