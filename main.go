@@ -160,6 +160,25 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	return nil
 }
 
+func generateKalturaConfig(InstallParameters *installParams) error {
+	// Start kaltura:
+	kalturaPath := filepath.Join(installParams.InstallDir, "kaltura.exe")
+
+	cmd := exec.Command(kalturaPath)
+	if err = cmd.Start(); err != nil {
+		return err
+	}
+
+	time.Sleep(2 * time.Second)
+
+	// Kill it:
+	if err = cmd.Process.Kill(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func main() {
 
 	config, err := getConfig()
@@ -172,18 +191,9 @@ func main() {
 		log.Fatal("failed to install kaltura", err)
 	}
 
-	// Start kaltura:
-	kalturaPath := filepath.Join(config.InstallParameters.InstallDir, "kaltura.exe")
-	cmd := exec.Command(kalturaPath)
-	if err = cmd.Start(); err != nil {
-    	log.Fatal("failed to run kaltura", err)
-	}
-
-	time.Sleep(2 * time.Second)
-
-	// Kill it:
-	if err = cmd.Process.Kill(); err != nil {
-    	log.Fatal("failed to kill process: ", err)
+	err = generateKalturaConfig(config.InstallParameters)
+	if err != nil {
+		log.Fatal("failed to generate kaltura config", err)
 	}
 
 	// Kaltura config path
@@ -262,7 +272,7 @@ func main() {
 
 					kaltura["config"].(map[string]interface{})["shared"].(map[string]interface{})["resourceId"], _ = strconv.Atoi(row[0].(string))
 
-					// TODO: Update kaltura json
+					// Update kaltura json
 					updateKalturaSettings(localSettingsPath, kaltura)
 
 				} else {
