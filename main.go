@@ -157,10 +157,11 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	)
 
 	strings.ReplaceAll(installString, "\n", " ")
+	strings.ReplaceAll(installString, "\t", " ")
 
 	log.Println("[INFO] Command string msiexec.exe " + installString)
 
-	cmd := exec.Command("cmd", "/C", "msiexec.exe" + installString)
+	cmd := exec.Command("cmd", "/C", "msiexec.exe " + installString)
 	// cmd.SysProcAttr = &syscall.SysProcAttr{}
     // cmd.SysProcAttr.CmdLine = installString
 	if err := cmd.Run(); err != nil {
