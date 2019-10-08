@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	// "syscall"
+	"syscall"
 	"time"
 
 	"golang.org/x/oauth2/google"
@@ -161,9 +161,9 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 
 	log.Println("[INFO] Command string msiexec.exe " + installString)
 
-	cmd := exec.Command("cmd", "/C", "msiexec.exe " + installString)
-	// cmd.SysProcAttr = &syscall.SysProcAttr{}
-    // cmd.SysProcAttr.CmdLine = installString
+	cmd := exec.Command("jmsiexec.exe")
+	cmd.SysProcAttr = &syscall.SysProcAttr{}
+    cmd.SysProcAttr.CmdLine = installString
 	if err := cmd.Run(); err != nil {
 		log.Println("[ERROR] could not install kaltura")
 		return err
@@ -200,7 +200,7 @@ func main() {
 
 	err = installMSI(config.BinaryParameters, config.InstallParameters)
 	if err != nil {
-		log.Fatal("failed to install kaltura ", err)
+		log.Fatal("[ERROR] failed to install kaltura ", err)
 	}
 
 	err = generateKalturaConfig(config.InstallParameters)
@@ -274,7 +274,7 @@ func main() {
 					).ValueInputOption("USER_ENTERED").Do()
 
 					if err != nil {
-						log.Fatalf("unable to update sheet %v", err)
+						log.Fatalf("[ERROR] unable to update sheet %v", err)
 					}
 
 					log.Println("[INFO] cells updated")
