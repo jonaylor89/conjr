@@ -130,7 +130,7 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		return err
 	}
 
-	tmplString := `/i %s /qn /norestart
+	tmplString := `/i "%s" /qn /norestart
 		INSTALLDIR="%s" 
 		ADDLOCAL=ALL  
 		KALTURA_RECORDINGS_DIR="%s" 
