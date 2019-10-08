@@ -7,8 +7,8 @@
         "apptoken": "b17a48a9551d8b44076004458c3226a9",
         "apptoken_id": "1_3ma5nq5l",
         "partner_id": "1888231",
-        "desktop_shortcut": "no",
-        "program_shortcut": "yes"
+        "desktop_shortcut": "0",
+        "program_shortcut": "1"
     },
 
     "google_sheet_config": {
