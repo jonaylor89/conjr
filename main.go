@@ -160,19 +160,19 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	return nil
 }
 
-func generateKalturaConfig(InstallParameters *installParams) error {
+func generateKalturaConfig(installParams *InstallParameters) error {
 	// Start kaltura:
 	kalturaPath := filepath.Join(installParams.InstallDir, "kaltura.exe")
 
 	cmd := exec.Command(kalturaPath)
-	if err = cmd.Start(); err != nil {
+	if err := cmd.Start(); err != nil {
 		return err
 	}
 
 	time.Sleep(2 * time.Second)
 
 	// Kill it:
-	if err = cmd.Process.Kill(); err != nil {
+	if err := cmd.Process.Kill(); err != nil {
 		return err
 	}
 
