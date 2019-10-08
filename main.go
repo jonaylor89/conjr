@@ -132,9 +132,7 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	}
 
 	tmplString := `/i "%s" /qb /norestart
-		INSTALLDIR="%s" 
 		ADDLOCAL=ALL  
-		KALTURA_RECORDINGS_DIR="%s" 
 		KALTURA_URL=%s
 		KALTURA_APPTOKEN=%s
 		KALTURA_APPTOKEN_ID=%s
@@ -146,8 +144,8 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 
 	installString := fmt.Sprintf(tmplString,
 		binParams.FileLocation,
-		installParams.InstallDir,
-		installParams.RecordingDir,
+		// installParams.InstallDir,
+		// installParams.RecordingDir,
 		installParams.URL,
 		installParams.AppToken,
 		installParams.AppTokenID,
@@ -159,7 +157,7 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	strings.ReplaceAll(installString, "\n", " ")
 	strings.ReplaceAll(installString, "\t", " ")
 
-	log.Println("[INFO] Command string msiexec.exe " + installString)
+	log.Println("[INFO] msiexec.exe " + installString)
 
 	cmd := exec.Command("msiexec.exe")
 	cmd.SysProcAttr = &syscall.SysProcAttr{}
