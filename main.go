@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	// "syscall"
 	"time"
 
 	"golang.org/x/oauth2/google"
@@ -159,9 +160,9 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 
 	log.Println("[INFO] Command string msiexec.exe " + installString)
 
-	cmd := exec.Command("msiexec.exe")
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
-    cmd.SysProcAttr.CmdLine = installString
+	cmd := exec.Command("cmd", "/C", "msiexec.exe" + installString)
+	// cmd.SysProcAttr = &syscall.SysProcAttr{}
+    // cmd.SysProcAttr.CmdLine = installString
 	if err := cmd.Run(); err != nil {
 		log.Println("[ERROR] could not install kaltura")
 		return err
