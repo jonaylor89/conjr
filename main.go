@@ -151,6 +151,8 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		installParams.ProgramShortcut,
 	)
 
+	log.Println("[INFO] Command string " + installString)
+
 	cmd := exec.Command("msiexec.exe", installString)
 	if err := cmd.Run(); err != nil {
 		log.Println("[ERROR] could not install kaltura")
