@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2/google"
@@ -130,9 +131,9 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	}
 
 	tmplString := `/i %s /qn /norestart
-		INSTALLDIR="%s"
-		ADDLOCAL=ALL
-		KALTURA_RECORDINGS_DIR="%s"
+		INSTALLDIR="%s" 
+		ADDLOCAL=ALL  
+		KALTURA_RECORDINGS_DIR="%s" 
 		KALTURA_URL=%s
 		KALTURA_APPTOKEN=%s
 		KALTURA_APPTOKEN_ID=%s
@@ -150,6 +151,8 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		installParams.DesktopShortcut,
 		installParams.ProgramShortcut,
 	)
+
+	strings.ReplaceAll(installString, "\n"," ")
 
 	log.Println("[INFO] Command string " + installString)
 
