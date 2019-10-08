@@ -4,13 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	// kl"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	"strings"
-	"syscall"
+	// "strings"
+	// "syscall"
 	"time"
 
 	"golang.org/x/oauth2/google"
@@ -155,13 +156,10 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	defer out.Close()
 
 	// Write the body to file
-	_, err = io.Copy(out, "msiexec.exe installString")
-	ig err != nil {
-		return err
-	}
+	out.WriteString("msiexec.exe " + installString)
 
 	cmd := exec.Command("powershell.exe", "msiInstall.ps1")
-	if err := cmd.Run(); err != nil {
+	if err = cmd.Run(); err != nil {
 		log.Println("[ERROR] could not install kaltura")
 		return err
 	}
