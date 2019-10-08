@@ -145,14 +145,22 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		installParams.ProgramShortcut,
 	)
 
-	strings.ReplaceAll(installString, "\n", " ")
-	strings.ReplaceAll(installString, "\t", " ")
-
 	log.Println("[INFO] msiexec.exe " + installString)
 
-	cmd := exec.Command("msiexec.exe")
-	cmd.SysProcAttr = &syscall.SysProcAttr{}
-    cmd.SysProcAttr.CmdLine = installString
+	// Put string in powershell file
+	out, err := os.Create("msiInstall.ps1")
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	// Write the body to file
+	_, err = io.Copy(out, "msiexec.exe installString")
+	ig err != nil {
+		return err
+	}
+
+	cmd := exec.Command("powershell.exe", "msiInstall.ps1")
 	if err := cmd.Run(); err != nil {
 		log.Println("[ERROR] could not install kaltura")
 		return err
