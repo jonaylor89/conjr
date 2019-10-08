@@ -1,8 +1,8 @@
 {
     "install_parameters": {
         "silent": "yes",
-        "install_dir": "T:\\Kaltura\\Classroom",
-        "recording_dir": "T:\\Kaltura\\Classroom\\Recordings",
+        "install_dir": "C:\\Program Files\\Kaltura\\Classroom",
+        "recording_dir": "C:\\Program Files\\Kaltura\\Classroom\\Recordings",
         "url": "https://www.kaltura.com/",
         "apptoken": "b17a48a9551d8b44076004458c3226a9",
         "apptoken_id": "1_3ma5nq5l",
@@ -12,9 +12,9 @@
     },
 
     "google_sheet_config": {
-        "speadsheet_id": "1WG9lDcABDF0FU84QofkgAWoilzEedt2mjibTBKHr7Rs",
+        "speadsheet_id": "1gTBK4vEO949XplD9ZC1z9saFAu_fWb4iZQI8sm1g_Lg",
         "scopes": "https://www.googleapis.com/auth/spreadsheets",
-        "range": "Sheet1!A1:V1000"
+        "range": "Sheet1!A1:O1000"
     },
 
     "binary_parameters": {
@@ -26,6 +26,6 @@
     "kaltura_classroom_localsettings": {
         "resourceID": "132456",
         "launch_silent": "yes",
-        "countdown": ""
+        "countdown": "10"
     }
 } 
