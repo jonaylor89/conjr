@@ -141,6 +141,9 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		INSTALLDESKTOPSHORTCUT=%s
 		INSTALLPROGRAMSSHORTCUT=%s
 	`
+
+	fmt.Println(instalParams.ProgramShortcut)
+
 	installString := fmt.Sprintf(tmplString,
 		binParams.FileLocation,
 		installParams.InstallDir,
