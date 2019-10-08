@@ -140,6 +140,7 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		KALTURA_PARTNER_ID=%s
 		INSTALLDESKTOPSHORTCUT=%s
 		INSTALLPROGRAMSSHORTCUT=%s
+		/L*V "C:\VCU-Deploy\logs\Kaltura-Classroom-Install.log"
 	`
 
 	installString := fmt.Sprintf(tmplString,
@@ -154,7 +155,7 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		installParams.ProgramShortcut,
 	)
 
-	strings.ReplaceAll(installString, "\n"," ")
+	strings.ReplaceAll(installString, "\n", " ")
 
 	log.Println("[INFO] Command string " + installString)
 
