@@ -131,16 +131,7 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 		return err
 	}
 
-	tmplString := `/i "%s" /qb /norestart
-		ADDLOCAL=ALL  
-		KALTURA_URL=%s
-		KALTURA_APPTOKEN=%s
-		KALTURA_APPTOKEN_ID=%s
-		KALTURA_PARTNER_ID=%s
-		INSTALLDESKTOPSHORTCUT=%s
-		INSTALLPROGRAMSSHORTCUT=%s
-		/L*V "C:\VCU-Deploy\logs\Kaltura-Classroom-Install.log"
-	`
+	tmplString := `/i "%s" /qb /norestart ADDLOCAL=ALL KALTURA_URL=%s KALTURA_APPTOKEN=%s KALTURA_APPTOKEN_ID=%s KALTURA_PARTNER_ID=%s INSTALLDESKTOPSHORTCUT=%s INSTALLPROGRAMSSHORTCUT=%s /L*V "C:\VCU-Deploy\logs\Kaltura-Classroom-Install.log"`
 
 	installString := fmt.Sprintf(tmplString,
 		binParams.FileLocation,
