@@ -130,9 +130,9 @@ func installMSI(binParams *BinaryParameters, installParams *InstallParameters) e
 	}
 
 	tmplString := `/i %s /qn /norestart
-		INSTALLDIR=%s
+		INSTALLDIR="%s"
 		ADDLOCAL=ALL
-		KALTURA_RECORDINGS_DIR=%s
+		KALTURA_RECORDINGS_DIR="%s"
 		KALTURA_URL=%s
 		KALTURA_APPTOKEN=%s
 		KALTURA_APPTOKEN_ID=%s
@@ -188,7 +188,7 @@ func main() {
 
 	err = installMSI(config.BinaryParameters, config.InstallParameters)
 	if err != nil {
-		log.Fatal("failed to install kaltura", err)
+		log.Fatal("failed to install kaltura ", err)
 	}
 
 	err = generateKalturaConfig(config.InstallParameters)
