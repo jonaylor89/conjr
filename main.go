@@ -292,6 +292,21 @@ func main() {
 		// Serial Number isn't in google sheet
 		// Add numbers to google sheet
 
+		campus, err := getCampus()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		building, err := getBuilding()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		room, err := getRoom()
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		hostname, err := os.Hostname()
 		if err != nil {
 			log.Fatal(err)
@@ -311,9 +326,9 @@ func main() {
 			Values: [][]interface{}{
 				{
 					resourceID, // Resource ID
-					nil, // Campus
-					nil, // Building
-					nil, // Room
+					campus, // Campus
+					building, // Building
+					room, // Room
 					hostname, // Hostname
 					ip, // IP Address
 					mac, // Mac Address

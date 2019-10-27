@@ -111,3 +111,15 @@ func macUint64() (uint64, error) {
 
     return uint64(0), errors.New("couldn't get MAC address")
 }
+
+func getCampus() (string, error) {
+	return "", nil
+}
+
+func getBuilding() (string, error) {
+	return "", nil
+}
+
+func getRoom() (string, error) {
+	return "", nil
+}
