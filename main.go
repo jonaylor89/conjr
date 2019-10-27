@@ -292,17 +292,17 @@ func main() {
 		// Serial Number isn't in google sheet
 		// Add numbers to google sheet
 
-		campus, err := getCampus()
+		campus, err := grabHoustinsRegistryValue("Campus")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		building, err := getBuilding()
+		building, err := grabHoustinsRegistryValue("Building")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		room, err := getRoom()
+		room, err := grabHoustinsRegistryValue("Room")
 		if err != nil {
 			log.Fatal(err)
 		}

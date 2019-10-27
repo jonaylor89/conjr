@@ -8,6 +8,8 @@ import (
 	"os"
 	"errors"
 	"bytes"
+	
+	"golang.org/x/sys/windows/registry"
 )
 
 // downloadFile will download a url to a local file
@@ -112,14 +114,18 @@ func macUint64() (uint64, error) {
     return uint64(0), errors.New("couldn't get MAC address")
 }
 
-func getCampus() (string, error) {
-	return "", nil
-}
+func grabHoustinsRegistryValue(value string) (string, error) {
+	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\VCU-Deploy\System\PhysicalLocation\`, registry.QUERY_VALUE)
+	if err != nil {
+		return "", err
+	}
 
-func getBuilding() (string, error) {
-	return "", nil
-}
+	defer k.Close()
 
-func getRoom() (string, error) {
-	return "", nil
+	s, _, err := k.GetStringValue("SystemRoot")
+	if err != nil {
+		return "", err
+	}
+
+	return s, nil
 }
