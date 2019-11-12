@@ -257,7 +257,7 @@ func main() {
 		log.Fatal("no data found.")
 	} else {
 		for _, row := range resp.Values {
-			if row[7].(string) == string(serialNumber) {
+			if row[7].(string) == strings.TrimSpace(string(serialNumber)) {
 				temp, _ := strconv.Atoi(row[0].(string))
 				if temp != resourceID && temp == 0 {
 					row[1] = resourceID
