@@ -282,6 +282,8 @@ func main() {
 					// Update kaltura json
 					updateKalturaSettings(localSettingsPath, kaltura)
 
+					return
+
 				} else {
 					log.Println("[INFO] nothing to change for " + row[7].(string))
 					return
