@@ -114,7 +114,7 @@ func macUint64() (uint64, error) {
     return uint64(0), errors.New("couldn't get MAC address")
 }
 
-func grabHoustinsRegistryValue(value string) (string, error) {
+func grabRegStuff(value string) (string, error) {
 	k, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\VCU-Deploy\System\PhysicalLocation\`, registry.QUERY_VALUE)
 	if err != nil {
 		return "", err
