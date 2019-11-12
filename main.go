@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
-	// "strings"
+	"strings"
 	// "syscall"
 	"time"
 
@@ -332,7 +332,7 @@ func main() {
 					hostname, // Hostname
 					ip, // IP Address
 					mac, // Mac Address
-					string(serialNumber), // Serial Number
+					strings.TrimSpace(string(serialNumber)), // Serial Number
 					nil, // Domain
 					nil, // MBU
 					nil, // SBU
