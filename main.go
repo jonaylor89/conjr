@@ -332,7 +332,7 @@ func main() {
 					hostname, // Hostname
 					ip, // IP Address
 					mac, // Mac Address
-					serialNumber, // Serial Number
+					string(serialNumber), // Serial Number
 					nil, // Domain
 					nil, // MBU
 					nil, // SBU

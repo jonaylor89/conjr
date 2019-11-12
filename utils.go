@@ -122,7 +122,7 @@ func grabRegStuff(value string) (string, error) {
 
 	defer k.Close()
 
-	s, _, err := k.GetStringValue("SystemRoot")
+	s, _, err := k.GetStringValue(value)
 	if err != nil {
 		return "", err
 	}
