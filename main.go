@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	// "fmt"
 	"io/ioutil"
 	// "io"
 	"log"
@@ -124,52 +124,52 @@ func getConfig() (*Config, error) {
 	return &config, nil
 }
 
-func installMSI(binParams *BinaryParameters, installParams *InstallParameters) error {
+// func installMSI(binParams *BinaryParameters, installParams *InstallParameters) error {
 
-	// Download Binary
-	err := downloadFile(binParams.FileLocation, binParams.URL)
-	if err != nil {
-		return err
-	}
+// 	// Download Binary
+// 	err := downloadFile(binParams.FileLocation, binParams.URL)
+// 	if err != nil {
+// 		return err
+// 	}
 
-	tmplString := `/i "%s" /qb /norestart ADDLOCAL=ALL KALTURA_URL=%s KALTURA_APPTOKEN=%s KALTURA_APPTOKEN_ID=%s KALTURA_PARTNER_ID=%s INSTALLDESKTOPSHORTCUT=%s INSTALLPROGRAMSSHORTCUT=%s /L*V "C:\VCU-Deploy\logs\Kaltura-Classroom-Install.log"`
+// 	tmplString := `/i "%s" /qb /norestart ADDLOCAL=ALL KALTURA_URL=%s KALTURA_APPTOKEN=%s KALTURA_APPTOKEN_ID=%s KALTURA_PARTNER_ID=%s INSTALLDESKTOPSHORTCUT=%s INSTALLPROGRAMSSHORTCUT=%s /L*V "C:\VCU-Deploy\logs\Kaltura-Classroom-Install.log"`
 
-	installString := fmt.Sprintf(tmplString,
-		binParams.FileLocation,
-		// installParams.InstallDir,
-		// installParams.RecordingDir,
-		installParams.URL,
-		installParams.AppToken,
-		installParams.AppTokenID,
-		installParams.PartnerID,
-		installParams.DesktopShortcut,
-		installParams.ProgramShortcut,
-	)
+// 	installString := fmt.Sprintf(tmplString,
+// 		binParams.FileLocation,
+// 		// installParams.InstallDir,
+// 		// installParams.RecordingDir,
+// 		installParams.URL,
+// 		installParams.AppToken,
+// 		installParams.AppTokenID,
+// 		installParams.PartnerID,
+// 		installParams.DesktopShortcut,
+// 		installParams.ProgramShortcut,
+// 	)
 
-	log.Println("[INFO] msiexec.exe " + installString)
+// 	log.Println("[INFO] msiexec.exe " + installString)
 
-	// Put string in powershell file
-	out, err := os.Create("msiInstall.ps1")
-	if err != nil {
-		return err
-	}
-	defer out.Close()
+// 	// Put string in powershell file
+// 	out, err := os.Create("msiInstall.ps1")
+// 	if err != nil {
+// 		return err
+// 	}
+// 	defer out.Close()
 
-	// Write the body to file
-	out.WriteString("msiexec.exe " + installString)
+// 	// Write the body to file
+// 	out.WriteString("msiexec.exe " + installString)
 
-	cmd := exec.Command("powershell.exe", "msiInstall.ps1")
-	if err = cmd.Run(); err != nil {
-		log.Println("[ERROR] could not install kaltura")
-		return err
-	}
+// 	cmd := exec.Command("powershell.exe", "msiInstall.ps1")
+// 	if err = cmd.Run(); err != nil {
+// 		log.Println("[ERROR] could not install kaltura")
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 func generateKalturaConfig(installParams *InstallParameters) error {
 	// Start kaltura:
-	kalturaPath := filepath.Join(installParams.InstallDir, "kaltura.exe")
+	kalturaPath := filepath.Join(installParams.InstallDir, "KalturaClassroom.exe")
 
 	cmd := exec.Command(kalturaPath)
 	if err := cmd.Start(); err != nil {
@@ -193,10 +193,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = installMSI(config.BinaryParameters, config.InstallParameters)
-	if err != nil {
-		log.Fatal("[ERROR] failed to install kaltura ", err)
-	}
+	// err = installMSI(config.BinaryParameters, config.InstallParameters)
+	// if err != nil {
+	// 	log.Fatal("[ERROR] failed to install kaltura ", err)
+	// }
 
 	err = generateKalturaConfig(config.InstallParameters)
 	if err != nil {
@@ -204,7 +204,7 @@ func main() {
 	}
 
 	// Kaltura config path
-	localSettingsPath := filepath.Join(os.Getenv("SystemDrive"), "\\VCU-Deploy\\config\\Kaltura\\config.json")
+	localSettingsPath := filepath.Join(os.Getenv("SystemDrive"), "\\Program Files\\Kaltura\\Classroom\\Settings\\localSettings.json")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -292,34 +292,34 @@ func main() {
 		// Serial Number isn't in google sheet
 		// Add numbers to google sheet
 
-		campus, err := grabHoustinsRegistryValue("Campus")
+		campus, err := grabRegStuff("Campus")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("[ERROR] ", err)
 		}
 
-		building, err := grabHoustinsRegistryValue("Building")
+		building, err := grabRegStuff("Building")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("[ERROR] ", err)
 		}
 
-		room, err := grabHoustinsRegistryValue("Room")
+		room, err := grabRegStuff("Room")
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("[ERROR] ", err)
 		}
 
 		hostname, err := os.Hostname()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("[ERROR] ", err)
 		}
 
 		ip, err := externalIP() 
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("[ERROR] ", err)
 		}
 
 		mac, err := macUint64()
 		if err != nil {
-			log.Fatal(err)
+			log.Fatal("[ERROR] ", err)
 		}
 
 		rb := &sheets.ValueRange{
@@ -332,7 +332,7 @@ func main() {
 					hostname, // Hostname
 					ip, // IP Address
 					mac, // Mac Address
-					serialNumber, // Serial Number
+					string(serialNumber), // Serial Number
 					nil, // Domain
 					nil, // MBU
 					nil, // SBU
